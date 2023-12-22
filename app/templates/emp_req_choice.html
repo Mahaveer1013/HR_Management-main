@@ -13,6 +13,17 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     </head>
     <body>
+        <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+        <script src="https://cdn.socket.io/4.7.2/socket.io.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+                
+        <script type="text/javascript" charset="utf-8">
+            var socket = io();
+        </script>
+        <script type="module">
+            import io from 'socket.io-client';
+            const socket = io();
+        </script>
         <div class="container">
             <div class="changeOptContainer">
                 <div class="chnageField">
@@ -121,17 +132,6 @@
                         balance : {{leave_balance}}
                     </div>
                 </div>
-                <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
-                <script src="https://cdn.socket.io/4.7.2/socket.io.js"></script>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
-                
-                <script type="text/javascript" charset="utf-8">
-                    var socket = io();
-                </script>
-                <script type="module">
-                    import io from 'socket.io-client';
-                    const socket = io();
-                </script>
                 <script>
                     var submitBtn = document.querySelector(".leavesubmit");
                     submitBtn.addEventListener('click',function(){
@@ -145,7 +145,7 @@
                         leaveDet.to_date = ToDate.value;
                         console.log('Form Data:', leaveDet);
                         socket.emit('leave',leaveDet);
-                        document.getElementById("leave_form").reset();
+                        //document.getElementById("leave_form").reset();
                     });
                 </script>
             </section>
@@ -177,7 +177,7 @@
                                 <label>To</label>
                                 <input type="time" name="to_time" id="to_time">
                             </div>
-                            <button class="requestBtn latesubmit" type="button">Request</button>
+                            <button class="requestBtn latesubmit" type="submit">Request</button>
                         </form>
     
                     </div>

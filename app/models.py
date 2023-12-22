@@ -31,7 +31,7 @@ class Employee(db.Model, UserMixin):
     designation = db.Column(db.String(150), nullable=True)
     workType = db.Column(db.String(150))
     email = db.Column(db.String(150))
-    phoneNumber = db.Column(db.Integer)
+    phoneNumber = db.Column(db.String(150))
     adharNumber = db.Column(db.Integer)
     gender = db.Column(db.String(150))
     address = db.Column(db.String(150))

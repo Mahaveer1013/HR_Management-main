@@ -14,7 +14,6 @@ from .funcations import *
 
 auth = Blueprint('auth', __name__)
 
-
 @auth.route('/admin-login', methods=['POST', 'GET'])
 def login():
     admin = Login_admin.query.filter_by(id=1).first()
@@ -22,8 +21,6 @@ def login():
         if request.method == 'POST':
             email = request.form.get('email')
             password = request.form.get('password')
-            print("email", email)
-            print("pwd:", password)
 
             dbemail = Login_admin.query.filter_by(email=email).first()
             if dbemail:
@@ -35,15 +32,19 @@ def login():
             else:
                 flash("Incorrect Email", category='error')
     else:
-        addAdmin = Login_admin(name="Admin", email="vsabarinathan1611@gmail.com", phoneNumber="123456789",
-                               password="sha256$idRijyfQJjGQ3s7P$cedf4eb4aaaddab35c3423e31ab70bd5f60fb8b871f18e37ebec2359a818b6db", designation="HR")
+        # Assuming you're using Flask's generate_password_hash to hash passwords during registration
+        addAdmin = Login_admin(
+            name="Admin",
+            email="vsabarinathan1611@gmail.com",
+            phoneNumber="123456789",
+            password=generate_password_hash("your_password_here"),
+            designation="HR"
+        )
         db.session.add(addAdmin)
         db.session.commit()
         print('Created Admin!')
 
     return render_template('login.html')
-
-
 @auth.route('/login', methods=['POST', 'GET'])
 def admin_login():
     if request.method == 'POST':
@@ -104,9 +105,8 @@ def signup():
             db.session.commit()
 
             # Redirect to a success page or perform any other necessary actions
-            return redirect(url_for('views.signup_success'))
+            return redirect(url_for('views.emp_login_page'))
 
     # Render the signup form for GET requests
     return render_template('signup.html')
-
 

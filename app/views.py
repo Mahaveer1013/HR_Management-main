@@ -4,14 +4,12 @@ from .models import Employee,Attendance,Shift_time,Backup, late, leave,notificat
 from flask import Blueprint, render_template, request, flash, redirect, url_for,jsonify,session
 import json
 import datetime
-from flask import session
 import pandas as pd
 from flask import current_app as app
 from datetime import datetime, timedelta
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 from .funcations import *
-from .sms import send_sms
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -334,14 +332,32 @@ def handle_lateform_callback(lateDet):
     approved_by='Hod Name'
     hr_approval='Pending'
 
-    late_balance=Emp_login.query.filter_by(emp_id=emp_id).first()
-    if late_balance:
-        late_balance.late_balance -= 1
-
-        # Commit the changes to the database
+    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    if user:
+        user.late_balance -= 1
+        email=user.email
+        late_balance=user.late_balance
         db.session.commit()
+    
     else:
         print(f"Employee with emp_id {emp_id} not found.")
+    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    if user:
+        email=user.email
+        try:
+            sub=" You Have Taken Late Permission "
+            body=" You Have Taken Late permission \n And You Have {} Late balance \n Have a Great Day".format(late_balance)
+            send_mail(email, sub, body)
+        except:
+            print("Mail Not Sent")
+
+    try:
+        user=Employee.query.filter_by(emp_id=emp_id).first()
+        phone=user.phoneNumber
+        body=" You Have Taken Late permission \n And You Have {} Late balance \n Have a Great Day".format(late_balance)
+        send_sms(phone,body)
+    except:
+        print("Sms Not Sent")
 
     try:
         new_request=late(emp_id=emp_id,emp_name=emp_name,reason=reason,from_time=from_time,to_time=to_time,status=status,hod_approval=hod_approval,approved_by=approved_by,hr_approval=hr_approval)
@@ -365,7 +381,6 @@ def request_disp():
     return render_template('request_disp.html',late_permission=late_permission,leave_permission=leave_permission)
 
 @socketio.on('leave')
-@login_required
 def handle_leaveform_callback(leaveDet):
     emp_id=session.get('emp_id')
     emp_name=session.get('name')
@@ -377,15 +392,33 @@ def handle_leaveform_callback(leaveDet):
     approved_by='Hod Name'
     hr_approval='Pending'
 
-    leave_balance=Emp_login.query.filter_by(emp_id=emp_id).first()
-    if leave_balance:
-        leave_balance.leave_balance -= 1
-
-        # Commit the changes to the database
+    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    if user:
+        user.leave_balance -= 1
+        email=user.email
+        leave_balance=user.leave_balance
         db.session.commit()
     else:
         print(f"Employee with emp_id {emp_id} not found.")
+    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    if user:
+        email=user.email
+        try:
+            sub=" You Have Taken Leave "
+            body=" You Have Taken Leave \n And You Have {} Leave balance \n Have a Great Day".format(leave_balance)
+            send_mail(email, sub, body)
+        except:
+            print("Mail Not Sent")
 
+        try:
+            user=Employee.query.filter_by(emp_id=emp_id).first()
+            phone=user.phoneNumber
+            phone="+91"+phone
+            print(type(phone))
+            body=" You Have Taken leave permission \n And You Have {} leave balance \n Have a Great Day".format(leave_balance)
+            send_sms([phone],body)
+        except:
+            print("Sms Not Sent")
 
     try:
         new_request=leave(emp_id=emp_id,emp_name=emp_name,reason=reason,from_date=from_date,to_date=to_date,status=status,hod_approval=hod_approval,approved_by=approved_by,hr_approval=hr_approval)
@@ -394,8 +427,6 @@ def handle_leaveform_callback(leaveDet):
         all_leaveData={'emp_id':emp_id,'emp_name':emp_name,'reason':reason,'from_date':from_date,'to_date':to_date,'status':status,'hod_approval':hod_approval,'approved_by':approved_by,'hr_approval':hr_approval}
         print(all_leaveData)
         emit('leave', all_leaveData, broadcast=True)
-
-
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")
@@ -534,13 +565,43 @@ def emp_login():
                 session['password'] = password
                 session['name'] = user.name
                 session['email'] = user.email
-                return render_template("emp_req_choice.html",emp_id=user.emp_id,email=user.email,name=user.name,late_balance=user.late_balance,leave_balance=user.leave_balance)
+                session['leave_balance']=user.leave_balance
+                session['late_balance']=user.late_balance
+                return redirect(url_for('views.user_dashboard'))
             else:
                 flash("Incorrect Password", category='error')
         else:
             flash("Incorrect Employee ID", category='error')
     return render_template("emp_log.html")
 
-@views.route("/signup_success")
-def signup_success():
-    return render_template("signup_success.html")
+@views.route("/user_dashboard",methods=['POST','GET'])
+def user_dashboard():
+    emp_id = session.get('emp_id')
+    email = session.get('email')
+    name = session.get('name')
+    user = Emp_login.query.filter_by(emp_id=emp_id).first()
+    leave_balance = user.leave_balance
+    late_balance = user.late_balance
+    return render_template("emp_req_choice.html",emp_id=emp_id,email=email,name=name,late_balance=late_balance,leave_balance=leave_balance)
+
+@views.route("attendance_upload_page",methods=['POST','GET'])
+def attendance_upload_page():
+    return render_template('upload_attendance.html')
+
+@views.route("/attendance_upload",methods=['POST','GET'])
+def upload_attendance():
+    if(request.method=='POST'):
+        file=request.files['attendance']
+        filename = secure_filename(file.filename)
+        print(filename)
+        file_path=os.path.join(app.config['EXCEL_FOLDER'], filename)
+        file.save(file_path)
+        process_excel_data(file_path)
+        return redirect(url_for('views.calculate'))
+
+    else:
+        return redirect(url_for('views.attendance_upload_page'))
+
+# @views.route("/festival_excel")
+# def festival_excel():
+    
