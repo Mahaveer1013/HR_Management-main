@@ -37,7 +37,7 @@ def login():
             name="Admin",
             email="vsabarinathan1611@gmail.com",
             phoneNumber="123456789",
-            password=generate_password_hash("your_password_here"),
+            password=generate_password_hash("admin"),
             designation="HR"
         )
         db.session.add(addAdmin)

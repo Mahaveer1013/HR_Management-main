@@ -99,7 +99,7 @@
       </header>
 
       <menu class="table-menu" style="display: flex">
-        <ul class="btn-container">
+        <div class="btn-container">
           <a href="/today_attendance" class="tag-btn click active">Today Attendance</a>
           <a href="/yesterday_attendance" class="tag-btn click">Yesterday Attendance</a>
           <a href="/month_attendance" class="tag-btn click">This Month Attendance</a>
@@ -111,52 +111,46 @@
             <option value="B">B ~ Shift</option>
             <option value="C">C ~ Shift</option>
           </select>
-        </ul>
+        </div>
       </menu>
 
       <link rel="stylesheet" href="static/css/attendance.css" />
       <!-- <iframe src="" frameborder="0" class="frame"></iframe> -->
 
-      <section class="frame today-attendance" style="display: flex">
+      <section class="frame month-attendance" style="display: flex;">
         <div class="inner-frame">
-          <div class="frame-header">
-            <div class="frame-details">
-              <p class="shift name"><span class="tag">A</span> ~ shift</p>
-              <p class="frame-name">Attendance</p>
+            <div class="frame-header">
+                <div class="frame-details">
+                    <p class="frame-name">Attendance</p>
+                    <p class="shift name"><span class="tag">A</span> ~ shift</p>
+                </div>
+                <div class="frame-search">
+                    <input type="text" name="idsearch" id="idsearch" placeholder="Search By ID">
+                    <input type="text" name="namesearch" id="namesearch" placeholder="Search By Name">
+                </div>
+                <div class="frame-options">
+                    <button type="button" class="download">
+                        <i class="fas fa-file-excel"></i>
+                    </button>
+                </div>
             </div>
-            <div class="frame-options">
-              <button type="button" class="download">
-                <i class="fas fa-file-excel"></i>
-              </button>
+            <div class="frame-body">
+                <table class="attendance-table">
+                    <thead>
+                        <tr class="thead">
+                            <th>EmpId</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tableBody filter">
+                        
+                    </tbody>
+                </table>
             </div>
-          </div>
-          <div class="frame-body">
-            <table class="today-attendance-table">
-              <thead>
-                <tr class="tablehead">
-                  <th>EmpId</th>
-                  <th>Name</th>
-                  <th>Date</th>
-                  <th>Shift Intime</th>
-                  <th>Shift Outtime</th>
-                  <th>Intime</th>
-                  <th>Outtime</th>
-                  <th>Late By</th>
-                  <th>Early Go</th>
-                  <th>Total Duration</th>
-                  <th>Extra Time</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody class="tableBody"></tbody>
-            </table>
-          </div>
         </div>
-      </section>
+    </section>
 
-      
-
-      <script src="static/js/today_attendance.js"></script>
+      <script src="static/js/month_attendance.js"></script>
     </main>
     <script src="static/js/script.js"></script>
   </body>

@@ -141,37 +141,3 @@ function generateAttendanceTable() {
 
 // Call the function to generate the attendance table when the script is loaded
 generateAttendanceTable();
-
-
-const row = document.querySelectorAll(".attendance-table-body tr");
-const SearchById = document.getElementById("searchById");
-
-// SearchById.addEventListener('input', ()=> {
-//     let value = SearchById.value.toLowerCase();
-
-//     row.forEach(tr => {
-//         let id = tr.querySelector(".id").innerHTML.toLowerCase();
-//         if (id.includes(value) || id == value) {
-//             tr.style.display = "";
-//         }else{
-//             tr.style.display = "none";
-//         }
-//     });
-
-// });
-
-// const SearchByName = document.getElementById("searchByName");
-
-// SearchByName.addEventListener('input', ()=> {
-//     let value = SearchByName.value.toLowerCase();
-
-//     row.forEach(tr => {
-//         let id = tr.querySelector(".name").innerHTML.toLowerCase();
-//         if (id.includes(value) || id == value) {
-//             tr.style.display = "";
-//         }else{
-//             tr.style.display = "none";
-//         }
-//     });
-
-// });

@@ -584,7 +584,7 @@ def user_dashboard():
     late_balance = user.late_balance
     return render_template("emp_req_choice.html",emp_id=emp_id,email=email,name=name,late_balance=late_balance,leave_balance=leave_balance)
 
-@views.route("attendance_upload_page",methods=['POST','GET'])
+@views.route("/attendance_upload_page",methods=['POST','GET'])
 def attendance_upload_page():
     return render_template('upload_attendance.html')
 
@@ -602,6 +602,38 @@ def upload_attendance():
     else:
         return redirect(url_for('views.attendance_upload_page'))
 
-# @views.route("/festival_excel")
-# def festival_excel():
-    
+@views.route("/attendance_table")
+@login_required
+def attendance_table():
+    return render_template("admin.html")
+
+@views.route("/late_table")
+@login_required
+def late_table():
+    return render_template("late_table.html")
+
+@views.route("/leave_table")
+@login_required
+def leave_table():
+    return render_template("leave_table.html")
+
+@views.route("/today_attendance")
+@login_required
+def today_attendance():
+    return render_template("admin.html")
+
+@views.route("/yesterday_attendance")
+@login_required
+def yesterday_attendance():
+    return render_template("admin.html")
+
+@views.route("/month_attendance")
+@login_required
+def month_attendance():
+    return render_template("month_attendance.html")
+
+@views.route("/last_month_attendance")
+@login_required
+def last_month_attendance():
+    return render_template("month_attendance.html")
+
