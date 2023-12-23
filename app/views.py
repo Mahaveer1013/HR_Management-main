@@ -41,8 +41,10 @@ def admin():
     
     # employee =Employee.query.order_by(Employee.id)
     employee =Attendance.query.order_by(Attendance.id)   
+    late_permission=late.query.order_by(late.date).all()
+    leave_permission=leave.query.order_by(leave.date).all()
     # sihft=Shift_time.query.order_by(Shift_time.id) 
-    return render_template('admin.html',employee=employee)
+    return render_template('admin.html',employee=employee,late_permission=late_permission,leave_permission=leave_permission)
 
 @views.route('/edit', methods=['POST', 'GET'])
 @login_required
@@ -360,6 +362,7 @@ def handle_lateform_callback(lateDet):
         print("Sms Not Sent")
 
     try:
+        print(reason)
         new_request=late(emp_id=emp_id,emp_name=emp_name,reason=reason,from_time=from_time,to_time=to_time,status=status,hod_approval=hod_approval,approved_by=approved_by,hr_approval=hr_approval)
         db.session.add(new_request)
         db.session.commit()
@@ -605,17 +608,21 @@ def upload_attendance():
 @views.route("/attendance_table")
 @login_required
 def attendance_table():
-    return render_template("admin.html")
+    late_permission=late.query.order_by(late.date).all()
+    leave_permission=leave.query.order_by(leave.date).all()
+    return render_template("admin.html",late_permission=late_permission,leave_permission=leave_permission)
 
 @views.route("/late_table")
 @login_required
 def late_table():
-    return render_template("late_table.html")
+    late_permission=late.query.order_by(late.date).all()
+    return render_template("late_table.html",late_permission=late_permission)
 
 @views.route("/leave_table")
 @login_required
-def leave_table():
-    return render_template("leave_table.html")
+def leave_table(): 
+    leave_permission=leave.query.order_by(leave.date).all()
+    return render_template("leave_table.html",leave_permission=leave_permission)
 
 @views.route("/today_attendance")
 @login_required
