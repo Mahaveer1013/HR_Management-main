@@ -34,11 +34,11 @@ def create_app():
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
-    from .models import Login_admin
+    from .models import Emp_login
     # User loader callback for LoginManager
     @login_manager.user_loader
     def load_user(id):
-        return Login_admin.query.get(int(id))
+        return Emp_login.query.get(int(id))
 
     # Import and register blueprints
     from .auth import auth

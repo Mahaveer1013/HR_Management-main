@@ -25,7 +25,7 @@ from flask_socketio import emit
 from app import socketio
 @views.route('/',methods=['POST','GET'])
 @login_required
-def admin():
+def admin():     # not used ,,,, used in auth itself
     try:
         inshift = Shift_time.query.filter_by(id=1).first()
         if not inshift:
@@ -80,7 +80,7 @@ def empEdit():
         else:
             flash('Employee not found!', 'error')
 
-        # Redirect the user to the 'admin' page or route.
+        # Redirect the user _to the 'admin' page or route.
     return redirect(url_for('views.admin'))
     
         
@@ -579,6 +579,8 @@ def emp_login():
 
 @views.route("/user_dashboard",methods=['POST','GET'])
 def user_dashboard():
+    if current_user.role=="admin":
+        return redirect(url_for('auth.logout'))
     emp_id = session.get('emp_id')
     email = session.get('email')
     name = session.get('name')
