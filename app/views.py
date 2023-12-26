@@ -612,7 +612,7 @@ def attendance_table():
     leave_permission=leave.query.order_by(leave.date).all()
     return render_template("admin.html",late_permission=late_permission,leave_permission=leave_permission)
 
-@views.route("/late_table")
+@views.route("/late_table/<user>")
 @login_required
 def late_table():
     late_permission=late.query.order_by(late.date).all()

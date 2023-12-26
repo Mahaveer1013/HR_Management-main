@@ -49,12 +49,12 @@
             </li>
           </ul>
         </li>
-        <li class="option logout">
+        <a href="/logout" class="option logout">
           <span>
             <i class="fas fa-sign-out-alt"></i>
             Logout
           </span>
-        </li>
+        </a>
       </ul>
     </nav>
     <aside class="sidebar">
@@ -72,17 +72,19 @@
           <a href="/late_table" class="menu-name">Late table</a>
         </form>
         <form action="/leave_table" class="menu-option">
-          <span class="icon">
-            <i class="fas fa-calendar-plus"></i>
-          </span>
-          <a href="/leave_table" class="menu-name">Leave table</a>
-        </form>
-        
-        <form action="" class="menu-option" style="display: none;">
+          <a href="/leave_table">
             <span class="icon">
-                <i class="fas fa-clock"></i>
-              </span>
-              <p class="menu-name">Shift List</p>    
+              <i class="fas fa-calendar-plus"></i>
+            </span>
+            <p class="menu-name">Leave table</p>
+          </a>
+        </form>
+
+        <form action="" class="menu-option" style="display: none">
+          <span class="icon">
+            <i class="fas fa-clock"></i>
+          </span>
+          <p class="menu-name">Shift List</p>
         </form>
       </ul>
     </aside>
@@ -100,10 +102,18 @@
 
       <menu class="table-menu" style="display: flex">
         <ul class="btn-container">
-          <a href="/today_attendance" class="tag-btn click active">Today Attendance</a>
-          <a href="/yesterday_attendance" class="tag-btn click">Yesterday Attendance</a>
-          <a href="/month_attendance" class="tag-btn click">This Month Attendance</a>
-          <a href="/last_month_attendance" class="tag-btn click">Last Month Attendance</a>
+          <a href="/today_attendance" class="tag-btn click active"
+            >Today Attendance</a
+          >
+          <a href="/yesterday_attendance" class="tag-btn click"
+            >Yesterday Attendance</a
+          >
+          <a href="/month_attendance" class="tag-btn click"
+            >This Month Attendance</a
+          >
+          <a href="/last_month_attendance" class="tag-btn click"
+            >Last Month Attendance</a
+          >
           <select name="shift" id="shift" class="tag-btn">
             <option value="">Select Shift Name</option>
             <option value="">ALL ~ Shift</option>
@@ -153,8 +163,6 @@
           </div>
         </div>
       </section>
-
-      
 
       <script src="static/js/today_attendance.js"></script>
     </main>
