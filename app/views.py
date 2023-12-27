@@ -614,7 +614,7 @@ def attendance_table():
     leave_permission=leave.query.order_by(leave.date).all()
     return render_template("admin.html",late_permission=late_permission,leave_permission=leave_permission)
 
-@views.route("/late_table/<user>")
+@views.route("/late_table")
 @login_required
 def late_table():
     late_permission=late.query.order_by(late.date).all()
@@ -646,3 +646,15 @@ def month_attendance():
 def last_month_attendance():
     return render_template("month_attendance.html")
 
+@views.route('/late_req_profile/<int:emp_id>/<string:emp_name>/<string:from_time>/<string:to_time>/<string:reason>')
+def late_req_profile(emp_id, emp_name, from_time, to_time, reason):
+    user = Emp_login.query.order_by(Emp_login.date.desc()).first()
+    late_details={
+        'late_balance':user.late_balance,
+        'leave_balance':user.leave_balance,
+        'ph_number':user.phoneNumber,
+        'reason':reason,
+        'emp_id':emp_id,
+        'emp_name':emp_name
+    }
+    return render_template("late_req_profile.html",late_details=late_details)#,late_permission_dict=late_permission_dict

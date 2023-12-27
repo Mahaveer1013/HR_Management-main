@@ -14,7 +14,7 @@ socketio = SocketIO()
 
 # Factory function to create the Flask app
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='static')
 
     # Configure the app
     app.config['SECRET_KEY'] = '#$&^&^WYYDUHS&YWE'
