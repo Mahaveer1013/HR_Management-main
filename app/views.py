@@ -122,8 +122,6 @@ def delete_employee():
 
     return "Employee deleted successfully!", 200
 
-   
-    
     
 @views.route('/profile-view')
 @login_required
@@ -232,17 +230,95 @@ def backup_data():
     db.session.commit()
     return redirect(url_for('views.admin'))
 
+@views.route('/upload_csv_page',methods=['POST','GET'])
+def upload_csv_page():
+    return render_template("upload_csv.html")
+
+@views.route('/upload_csv',methods=['POST','GET'])
+def upload_csv():
+    if request.method == 'POST':
+        if 'csvFile' not in request.files:
+            return "No file part"
+            
+        file = request.files['csvFile']
+        if file.filename == '':
+            return "No selected file"
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            print(filename)
+            file_path=os.path.join(app.config['EXCEL_FOLDER'], filename)
+            file.save(file_path)
+            process_csv_file(file_path)
+                # # Create a new database record with file name and current datetime
+                # now = datetime.now()
+                # current_time = now.strftime("%Y-%m-%d %H:%M:%S")
+                # data = NewShift(
+                #     name_date_day=f"File Uploaded on {current_time}",
+                #     filename=filename  # Add the filename to the database
+                # )
+                # db.session.add(data)
+                # db.session.commit()
+            
+            return redirect(url_for('views.process_csv'))
+        else:
+            return "File not allowed"
+    # I the request method is GET, render the upload form
+    return render_template('upload_csv.html')
+
+
+@views.route('/process_csv', methods=['POST','GET'])
+def process_csv():
+    # Query the database to get the latest uploaded record
+    latest_data = NewShift.query.order_by(desc(NewShift.id)).first()
+    
+    if not latest_data:
+        return "No files have been uploaded yet."
+    
+    latest_filename = latest_data.filename
+    csv_filepath = os.path.join(app.config['EXCEL_FOLDER'], latest_filename)
+
+    with open(csv_filepath, 'r') as csv_file:
+        csv_reader = csv.reader(csv_file)
+
+        # Skip the first row containing headers
+        next(csv_reader)  # Skip the first row
+
+        # Read the second row which contains the days of the week (Monday to Friday)
+        days_of_week = next(csv_reader)[2:]  # Assuming the first two columns are E.ID and Employee Name
+
+        for row in csv_reader:  # Reading the employee's data rows
+            employee_id = row[0]
+            employee_name = row[1]
+            shifts = row[2:]
+
+            # Combine the days of the week with the shifts
+            combined_shifts = days_of_week + shifts
+
+            # Here you can process the employee data and store it in the database
+            data_entry = NewShift(
+                name_date_day=employee_name,
+            )
+
+            # Map the combined shifts to corresponding day columns dynamically
+            for day_num, shift in enumerate(combined_shifts, start=1):
+                setattr(data_entry, f"day_{day_num}", shift)
+
+            db.session.add(data_entry)
+
+        db.session.commit()
+
+    return f"CSV data from {latest_filename} processed and stored in the database."
+
+@views.route('/del_csv')
+def del_csv():
+    db.session.query(NewShift).delete()
+    db.session.commit()
+    return redirect(url_for('upload_csv'))
+
 
 @views.route('/dashboard',methods=['POST','GET'])
 def dashboard():
     return render_template('dashboard.html')
-
-
-#mahaveer
-# Your route handlers and SocketIO events go here
-# @views.route('/')
-# def index():
-#     return render_template('index.html')
 
 
 @views.route('/late_form_page')
@@ -333,8 +409,8 @@ def handle_leaveform_callback(leaveDet):
     emp_id=session.get('emp_id')
     emp_name=session.get('name')
     reason=leaveDet['reason']
-    from_date=leaveDet['from_date']
-    to_date=leaveDet['to_date']
+    from_time=leaveDet['from_time']
+    to_time=leaveDet['to_time']
     approved_by='Hod Name'
     hr_approval='Pending'
 
@@ -372,100 +448,16 @@ def handle_leaveform_callback(leaveDet):
             print("Sms Not Sent")
 
     try:
-        new_request=leave(emp_id=emp_id,emp_name=emp_name,reason=reason,from_date=from_date,to_date=to_date,approved_by=approved_by,hr_approval=hr_approval)
+        new_request=leave(emp_id=emp_id,emp_name=emp_name,reason=reason,from_time=from_time,to_time=to_time,approved_by=approved_by,hr_approval=hr_approval)
         db.session.add(new_request)
         db.session.commit()
-        all_leaveData={'emp_id':emp_id,'emp_name':emp_name,'reason':reason,'from_date':from_date,'to_date':to_date,'approved_by':approved_by,'hr_approval':hr_approval}
+        all_leaveData={'emp_id':emp_id,'emp_name':emp_name,'reason':reason,'from_time':from_time,'to_time':to_time,'approved_by':approved_by,'hr_approval':hr_approval}
         print(all_leaveData)
         emit('leave', all_leaveData, broadcast=True)
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")
 
-@views.route('/upload_csv_page',methods=['POST','GET'])
-def upload_csv_page():
-    return render_template("upload_csv.html")
-
-@views.route('/upload_csv',methods=['POST','GET'])
-def upload_csv():
-    if request.method == 'POST':
-        if 'csvFile' not in request.files:
-            return "No file part"
-            
-        file = request.files['csvFile']
-        if file.filename == '':
-            return "No selected file"
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            print(filename)
-            file_path=os.path.join(app.config['EXCEL_FOLDER'], filename)
-            file.save(file_path)
-            process_csv_file(file_path)
-                # # Create a new database record with file name and current datetime
-                # now = datetime.now()
-                # current_time = now.strftime("%Y-%m-%d %H:%M:%S")
-                # data = NewShift(
-                #     name_date_day=f"File Uploaded on {current_time}",
-                #     filename=filename  # Add the filename to the database
-                # )
-                # db.session.add(data)
-                # db.session.commit()
-            
-            return redirect(url_for('views.process_csv'))
-        else:
-            return "File not allowed"
-    # I the request method is GET, render the upload form
-    return render_template('upload_csv.html')
-
-
-@views.route('/process_csv', methods=['POST','GET'])
-def process_csv():
-    # Query the database to get the latest uploaded record
-    latest_data = NewShift.query.order_by(desc(NewShift.id)).first()
-    
-    if not latest_data:
-        return "No files have been uploaded yet."
-    
-    latest_filename = latest_data.filename
-    csv_filepath = os.path.join(app.config['EXCEL_FOLDER'], latest_filename)
-
-    with open(csv_filepath, 'r') as csv_file:
-        csv_reader = csv.reader(csv_file)
-
-        # Skip the first row containing headers
-        next(csv_reader)  # Skip the first row
-
-        # Read the second row which contains the days of the week (Monday to Friday)
-        days_of_week = next(csv_reader)[2:]  # Assuming the first two columns are E.ID and Employee Name
-
-        for row in csv_reader:  # Reading the employee's data rows
-            employee_id = row[0]
-            employee_name = row[1]
-            shifts = row[2:]
-
-            # Combine the days of the week with the shifts
-            combined_shifts = days_of_week + shifts
-
-            # Here you can process the employee data and store it in the database
-            data_entry = NewShift(
-                name_date_day=employee_name,
-            )
-
-            # Map the combined shifts to corresponding day columns dynamically
-            for day_num, shift in enumerate(combined_shifts, start=1):
-                setattr(data_entry, f"day_{day_num}", shift)
-
-            db.session.add(data_entry)
-
-        db.session.commit()
-
-    return f"CSV data from {latest_filename} processed and stored in the database."
-
-@views.route('/del_csv')
-def del_csv():
-    db.session.query(NewShift).delete()
-    db.session.commit()
-    return redirect(url_for('upload_csv'))
 
 
 @views.route("/emp_login_page")
@@ -510,6 +502,7 @@ def user_dashboard():
     return render_template("emp_req_choice.html",emp_id=emp_id,email=email,name=name,late_balance=late_balance,leave_balance=leave_balance)
 
 @views.route("/attendance_upload_page",methods=['POST','GET'])
+@login_required
 def attendance_upload_page():
     return render_template('upload_attendance.html')
 
@@ -534,17 +527,33 @@ def attendance_table():
     leave_permission=leave.query.order_by(leave.date).all()
     return render_template("admin.html",late_permission=late_permission,leave_permission=leave_permission)
 
-@views.route("/late_table")
-@login_required
-def late_table():
-    late_permission=late.query.order_by(late.date).all()
-    return render_template("late_table.html",late_permission=late_permission)
+# @views.route("/late_table")
+# @login_required
+# def late_table():
+#     late_permission=late.query.order_by(late.date).all()
+#     return render_template("late_table.html",late_permission=late_permission)
 
-@views.route("/leave_table")
+# @views.route("/leave_table")
+# @login_required
+# def leave_table(): 
+#     leave_permission=leave.query.order_by(leave.date).all()
+#     return render_template("leave_table.html",leave_permission=leave_permission)
+
+@views.route("/late_req_table")
 @login_required
-def leave_table(): 
-    leave_permission=leave.query.order_by(leave.date).all()
-    return render_template("leave_table.html",leave_permission=leave_permission)
+def late_req_table():
+    permission_details=late.query.order_by(late.date).all()
+    permission_type="Late"
+    return render_template("req_table.html",permission=permission_details,permission_type=permission_type)
+
+
+@views.route("/leave_req_table")
+@login_required
+def leave_req_table():
+    permission_type="Leave"
+    permission_details=leave.query.order_by(leave.date).all()
+    return render_template("req_table.html",permission=permission_details,permission_type=permission_type)
+
 
 @views.route("/today_attendance")
 @login_required
@@ -566,13 +575,59 @@ def month_attendance():
 def last_month_attendance():
     return render_template("month_attendance.html")
 
+# @views.route('/late_req_profile/<int:emp_id>/<string:emp_name>/<string:from_time>/<string:to_time>/<string:reason>/<int:req_id>')
+# @login_required
+# def late_req_profile(emp_id, emp_name, from_time, to_time, reason,req_id):
+#     user = Emp_login.query.order_by(Emp_login.date.desc()).first()
+#     user_late=late.query.filter_by(id=req_id).first()
+#     req_date=user_late.date.strftime("%d-%m-%y")
+#     req_time=user_late.date.strftime("%H:%M")
+#     late_details={
+#         'late_balance':user.late_balance,
+#         'leave_balance':user.leave_balance,
+#         'approval':user_late.hr_approval,
+#         'req_date':req_date,
+#         'req_time':req_time,
+#         'from_time':from_time,
+#         'to_time':to_time,
+#         'approved_by':user_late.approved_by,
+#         'ph_number':user.phoneNumber,
+#         'id':user.id,
+#         'reason':reason,
+#         'emp_id':emp_id,
+#         'emp_name':emp_name
+#     }
+#     session['late_details']=late_details
+#     return render_template("late_req_profile.html",late_details=late_details)#,late_permission_dict=late_permission_dict
+
+# @views.route('/leave_req_profile/<int:emp_id>/<string:emp_name>/<string:from_date>/<string:to_date>/<string:reason>/<int:req_id>')
+# def leave_req_profile(emp_id, emp_name, from_date, to_date, reason,req_id):
+#     user = Emp_login.query.order_by(Emp_login.date.desc()).first()
+#     user_leave=leave.query.filter_by(id=req_id).first()
+#     leave_details={
+#         'leave_balance':user.leave_balance,
+#         'leave_balance':user.leave_balance,
+#         'approval':user_leave.hr_approval,
+#         'approved_by':user_leave.approved_by,
+#         'from_date':from_date,
+#         'to_date':to_date,
+#         'ph_number':user.phoneNumber,
+#         'id':user.id,
+#         'reason':reason,
+#         'emp_id':emp_id,
+#         'emp_name':emp_name
+#     }
+#     session['leave_details']=leave_details
+#     return render_template("leave_req_profile.html",leave_details=leave_details)#,late_permission_dict=late_permission_dict
+
 @views.route('/late_req_profile/<int:emp_id>/<string:emp_name>/<string:from_time>/<string:to_time>/<string:reason>/<int:req_id>')
+@login_required
 def late_req_profile(emp_id, emp_name, from_time, to_time, reason,req_id):
     user = Emp_login.query.order_by(Emp_login.date.desc()).first()
     user_late=late.query.filter_by(id=req_id).first()
     req_date=user_late.date.strftime("%d-%m-%y")
     req_time=user_late.date.strftime("%H:%M")
-    late_details={
+    req_details={
         'late_balance':user.late_balance,
         'leave_balance':user.leave_balance,
         'approval':user_late.hr_approval,
@@ -581,34 +636,42 @@ def late_req_profile(emp_id, emp_name, from_time, to_time, reason,req_id):
         'from_time':from_time,
         'to_time':to_time,
         'approved_by':user_late.approved_by,
+        'permission_type':'Late',
         'ph_number':user.phoneNumber,
         'id':user.id,
         'reason':reason,
         'emp_id':emp_id,
         'emp_name':emp_name
     }
-    session['late_details']=late_details
-    return render_template("late_req_profile.html",late_details=late_details)#,late_permission_dict=late_permission_dict
+    session['late_details']=req_details
+    return render_template("req_profile.html",req_details=req_details)#,late_permission_dict=late_permission_dict
 
-@views.route('/leave_req_profile/<int:emp_id>/<string:emp_name>/<string:from_date>/<string:to_date>/<string:reason>/<int:req_id>')
-def leave_req_profile(emp_id, emp_name, from_date, to_date, reason,req_id):
+@views.route('/leave_req_profile/<int:emp_id>/<string:emp_name>/<string:from_time>/<string:to_time>/<string:reason>/<int:req_id>')
+@login_required
+def leave_req_profile(emp_id, emp_name, from_time, to_time, reason,req_id):
     user = Emp_login.query.order_by(Emp_login.date.desc()).first()
-    user_leave=leave.query.filter_by(id=req_id).first()
-    leave_details={
+    user=leave.query.filter_by(id=req_id).first()
+    req_date=user.date.strftime("%d-%m-%y")
+    req_time=user.date.strftime("%H:%M")
+    req_details={
+        'late_balance':user.late_balance,
         'leave_balance':user.leave_balance,
-        'leave_balance':user.leave_balance,
-        'approval':user_leave.hr_approval,
-        'approved_by':user_leave.approved_by,
-        'from_date':from_date,
-        'to_date':to_date,
+        'approval':user.hr_approval,
+        'req_date':req_date,
+        'req_time':req_time,
+        'from_time':from_time,
+        'to_time':to_time,
+        'approved_by':user.approved_by,
         'ph_number':user.phoneNumber,
+        'permission_type':'Leave',
         'id':user.id,
         'reason':reason,
         'emp_id':emp_id,
         'emp_name':emp_name
     }
-    session['leave_details']=leave_details
-    return render_template("leave_req_profile.html",leave_details=leave_details)#,late_permission_dict=late_permission_dict
+    session['leave_details']=req_details
+    return render_template("req_profile.html",req_details=req_details)#,late_permission_dict=late_permission_dict
+
 
 # @views.route('/late_req_approve',methods=['POST','GET'])
 # def late_req_approve():

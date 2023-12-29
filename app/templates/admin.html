@@ -291,6 +291,30 @@ bell_btn.addEventListener("click", () => {
 
                   document.querySelector(".count").innerHTML = count-1;
                 });
+
+  document.querySelector(".download-btn").addEventListener("click", function () {
+      let confirmation = confirm("are you sure..?");
+
+      if (confirmation) {
+        document.querySelector(".model-footer").style.display = "none";
+        html2canvas(document.querySelector(".notification-model")).then(
+          (canvas) => {
+            // Create an image and set its source to the canvas data
+            var image = canvas.toDataURL("image/png");
+            // Create a temporary link to trigger the download
+            var tmpLink = document.createElement("a");
+            tmpLink.download = "username.png"; // Set the download name
+            tmpLink.href = image;
+
+            // Temporarily add the link to the document and trigger the download
+            document.body.appendChild(tmpLink);
+            tmpLink.click();
+            document.body.removeChild(tmpLink);
+            document.querySelector(".model-footer").style.display = "flex";
+          }
+        );
+      }
+});
     </script>
   </body>
 </html>

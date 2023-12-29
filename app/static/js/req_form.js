@@ -5,11 +5,11 @@ var leave_submitBtn = document.querySelector(".leavesubmit");
                         console.log("clicked")
                         const leaveDet ={}
                         var Reason = document.getElementById("leave_reason");
-                        var FromDate = document.getElementById("from_date");
-                        var ToDate = document.getElementById("to_date");
+                        var FromTime = document.getElementById("from_time");
+                        var ToTime = document.getElementById("to_time");
                         leaveDet.reason = Reason.value;
-                        leaveDet.from_date = FromDate.value;
-                        leaveDet.to_date = ToDate.value;
+                        leaveDet.from_time = FromTime.value;
+                        leaveDet.to_time = ToTime.value;
                         console.log('Form Data:', leaveDet);
                         socket.emit('leave',leaveDet);
                         //document.getElementById("leave_form").reset();
