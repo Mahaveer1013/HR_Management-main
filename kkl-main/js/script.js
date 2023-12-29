@@ -10,11 +10,11 @@ document.querySelector(".date").innerHTML = `Date : ${displayDate}`;
 document.querySelector(".time").innerHTML = `Time : ${displayDate}`;
 
 
-const notification_icon = document.querySelector(".notification-icon");
+// const notification_icon = document.querySelector(".notification-icon");
 
-notification_icon.addEventListener("click", ()=> {
-    document.querySelector(".notification-list").classList.toggle("active");
-});
+// notification_icon.addEventListener("click", ()=> {
+//     document.querySelector(".notification-list").classList.toggle("active");
+// });
 
 const toggle = document.querySelector(".toogle-sidebar");
 
@@ -50,3 +50,69 @@ document.querySelector('.print-btn').addEventListener('click', function() {
     window.print();
 });
 
+const bell_btn = document.querySelector(".notification-btn");
+const notifications = document.querySelector(".notifications");
+const add = document.querySelector(".add");
+
+bell_btn.addEventListener("click", ()=>{
+    notifications.classList.toggle("active");
+});
+
+add.addEventListener("click", ()=> {
+    let li = document.createElement("li");
+
+    li.innerHTML = `
+        <li class="notification-box">
+                <div class="profile">
+                    <img src="icon/default.jpeg" alt="default user">
+                </div>
+                <div class="notification-details">
+                    <div class="notification-user-name">
+                        User name 1
+                    </div>
+                    <div class="notification-message">
+                        requesting leave regarding late for today bla bla bla
+                        requesting leave regarding late for today bla bla bla
+                    </div>
+                </div>
+            </li>
+
+    `;
+    notifications.appendChild(li);
+
+    let count = notifications.childElementCount;
+    if (count > 9) {
+        count = "9+";
+    }
+
+    document.querySelector(".count").innerHTML = count;
+    
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    let all_downloads = document.querySelectorAll(".download");
+
+    all_downloads.forEach(download => {
+        download.addEventListener("click", () => {
+            let parent = download.parentElement.parentElement.parentElement;
+            let table = parent.querySelector('table');
+
+            // Convert the table to a worksheet
+            let ws = XLSX.utils.table_to_sheet(table);
+
+            // Create a workbook with a single worksheet
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+            // Convert the workbook to an array buffer
+            var wbArrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+            // Create a Blob from the array buffer
+            var blob = new Blob([wbArrayBuffer], { type: 'application/octet-stream' });
+
+            // Trigger download using FileSaver.js
+            let fileName = parent.querySelector(".frame-details").textContent;
+            saveAs(blob, `${fileName}.xlsx`);
+        });
+    });
+});

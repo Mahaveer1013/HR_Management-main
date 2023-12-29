@@ -1,6 +1,6 @@
 from flask_login import login_required, current_user,login_user
 from . import db
-from .models import Employee,Attendance,Shift_time,Backup, late, leave,notification,NewShift,Emp_login
+from .models import Employee,Attendance,Shift_time,Backup, late, leave,notifications ,NewShift,Emp_login
 from flask import Blueprint, render_template, request, flash, redirect, url_for,jsonify,session
 import json
 import datetime
@@ -43,8 +43,10 @@ def admin():     # not used ,,,, used in auth itself
     employee =Attendance.query.order_by(Attendance.id)   
     late_permission=late.query.order_by(late.date).all()
     leave_permission=leave.query.order_by(leave.date).all()
+    notification=notifications.query.order_by(notifications.timestamp).all()
+    print("notification : ",notification)
     # sihft=Shift_time.query.order_by(Shift_time.id) 
-    return render_template('admin.html',employee=employee,late_permission=late_permission,leave_permission=leave_permission)
+    return render_template('admin.html', notification=notification, employee=employee, late_permission=late_permission, leave_permission=leave_permission)
 
 @views.route('/edit', methods=['POST', 'GET'])
 @login_required
@@ -270,10 +272,12 @@ def handle_lateform_callback(lateDet):
     reason=lateDet['reason']
     from_time=lateDet['from_time']
     to_time=lateDet['to_time']
-    status='Pending'
-    hod_approval='Pending'
-    approved_by='Hod Name'
+    approved_by='hod name'
     hr_approval='Pending'
+
+    new_request=notifications(reason=reason,emp_name=emp_name,permission='Late')
+    db.session.add(new_request)
+    db.session.commit()
 
     user=Emp_login.query.filter_by(emp_id=emp_id).first()
     if user:
@@ -304,11 +308,11 @@ def handle_lateform_callback(lateDet):
 
     try:
         print(reason)
-        new_request=late(emp_id=emp_id,emp_name=emp_name,reason=reason,from_time=from_time,to_time=to_time,status=status,hod_approval=hod_approval,approved_by=approved_by,hr_approval=hr_approval)
+        new_request=late(emp_id=emp_id,emp_name=emp_name,reason=reason,from_time=from_time,to_time=to_time,approved_by=approved_by,hr_approval=hr_approval)
         db.session.add(new_request)
         db.session.commit()
         print("new request : ",new_request.emp_id)
-        all_latedata = {'emp_id':emp_id, 'emp_name':emp_name, 'reason':reason, 'from_time':from_time, 'to_time':to_time, 'status':status, 'hod_approval':hod_approval, 'approved_by':approved_by, 'hr_approval':hr_approval}
+        all_latedata = {'emp_id':emp_id, 'emp_name':emp_name, 'reason':reason, 'from_time':from_time, 'to_time':to_time, 'hr_approval':hr_approval}
         print("EMP ID : ",all_latedata['emp_id'])
 
         emit('late', all_latedata, broadcast=True)
@@ -331,10 +335,13 @@ def handle_leaveform_callback(leaveDet):
     reason=leaveDet['reason']
     from_date=leaveDet['from_date']
     to_date=leaveDet['to_date']
-    status='Pending'
-    hod_approval='Pending'
     approved_by='Hod Name'
     hr_approval='Pending'
+
+    
+    new_request=notifications(reason=reason,emp_name=emp_name,permission='Leave')
+    db.session.add(new_request)
+    db.session.commit()
 
     user=Emp_login.query.filter_by(emp_id=emp_id).first()
     if user:
@@ -365,10 +372,10 @@ def handle_leaveform_callback(leaveDet):
             print("Sms Not Sent")
 
     try:
-        new_request=leave(emp_id=emp_id,emp_name=emp_name,reason=reason,from_date=from_date,to_date=to_date,status=status,hod_approval=hod_approval,approved_by=approved_by,hr_approval=hr_approval)
+        new_request=leave(emp_id=emp_id,emp_name=emp_name,reason=reason,from_date=from_date,to_date=to_date,approved_by=approved_by,hr_approval=hr_approval)
         db.session.add(new_request)
         db.session.commit()
-        all_leaveData={'emp_id':emp_id,'emp_name':emp_name,'reason':reason,'from_date':from_date,'to_date':to_date,'status':status,'hod_approval':hod_approval,'approved_by':approved_by,'hr_approval':hr_approval}
+        all_leaveData={'emp_id':emp_id,'emp_name':emp_name,'reason':reason,'from_date':from_date,'to_date':to_date,'approved_by':approved_by,'hr_approval':hr_approval}
         print(all_leaveData)
         emit('leave', all_leaveData, broadcast=True)
 
@@ -460,34 +467,6 @@ def del_csv():
     db.session.commit()
     return redirect(url_for('upload_csv'))
 
-def process_csv_file(file_path):
-    with open(file_path, mode='r') as file:
-        csv_reader = csv.reader(file)
-        next(csv_reader)  # Skip the header row
-
-        for row in csv_reader:
-            employee_id, employee_name, *shifts = row
-
-            # Create a new NewShift instance and set its attributes
-            new_shift_entry = NewShift(
-                name_date_day=employee_name,
-                filename=file_path,
-                monday=shifts[0],
-                tuesday=shifts[1],
-                wednesday=shifts[2],
-                thursday=shifts[3],
-                friday=shifts[4]
-            )
-
-            # Set the day_* attributes dynamically
-            for day_num, shift in enumerate(shifts[5:], start=1):
-                setattr(new_shift_entry, f"day_{day_num}", shift)
-
-            # Add the new entry to the database session
-            db.session.add(new_shift_entry)
-
-        # Commit the changes to the database
-        db.session.commit()
 
 @views.route("/emp_login_page")
 def emp_login_page():
@@ -591,10 +570,14 @@ def last_month_attendance():
 def late_req_profile(emp_id, emp_name, from_time, to_time, reason,req_id):
     user = Emp_login.query.order_by(Emp_login.date.desc()).first()
     user_late=late.query.filter_by(id=req_id).first()
+    req_date=user_late.date.strftime("%d-%m-%y")
+    req_time=user_late.date.strftime("%H:%M")
     late_details={
         'late_balance':user.late_balance,
         'leave_balance':user.leave_balance,
         'approval':user_late.hr_approval,
+        'req_date':req_date,
+        'req_time':req_time,
         'from_time':from_time,
         'to_time':to_time,
         'approved_by':user_late.approved_by,

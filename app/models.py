@@ -114,13 +114,13 @@ class NewShift(db.Model):
     thursday = db.Column(db.String(255))
     friday = db.Column(db.String(255))
     
-class notification(db.Model):
+class notifications(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    message = db.Column(db.String(255))
+    reason = db.Column(db.String(255))
     timestamp = db.Column(db.DateTime, default=db.func.now())
-    def __init__(self, message):
-        self.message = message
-
+    emp_name = db.Column(db.String(255))
+    permission = db.Column(db.String(255))
+    
 
 # Late Model (Example)
 class late(db.Model, UserMixin):
@@ -130,8 +130,8 @@ class late(db.Model, UserMixin):
     reason = db.Column(db.String(150), nullable=False)
     from_time = db.Column(db.String(150), nullable=False)
     to_time = db.Column(db.String(150), nullable=False)
-    status = db.Column(db.String(150), default='Pending')
-    hod_approval = db.Column(db.String(150), default='Pending')
+    # status = db.Column(db.String(150), default='Pending')
+    # hod_approval = db.Column(db.String(150), default='Pending')
     approved_by = db.Column(db.String(150), default='Pending')
     hr_approval = db.Column(db.String(150), default='Pending')
     date = db.Column(db.DateTime(timezone=True), default=func.now())
@@ -143,8 +143,8 @@ class leave(db.Model, UserMixin):
     reason = db.Column(db.String(150), nullable=False)
     from_date = db.Column(db.String(150), nullable=False)
     to_date = db.Column(db.String(150), nullable=False)
-    status = db.Column(db.String(150), default='Pending')
-    hod_approval = db.Column(db.String(150), default='Pending')
+    #status = db.Column(db.String(150), default='Pending')
+    # hod_approval = db.Column(db.String(150), default='Pending')
     approved_by = db.Column(db.String(150), default='Pending')
     hr_approval = db.Column(db.String(150), default='Pending')
     date = db.Column(db.DateTime(timezone=True), default=func.now())

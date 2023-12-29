@@ -314,6 +314,36 @@ def count_attendance_and_update_shift():
       
 #     else:
 #         print("File not found")
+        
+def process_csv_file(file_path):
+    with open(file_path, mode='r') as file:
+        csv_reader = csv.reader(file)
+        next(csv_reader)  # Skip the header row
+
+        for row in csv_reader:
+            employee_id, employee_name, *shifts = row
+
+            # Create a new NewShift instance and set its attributes
+            new_shift_entry = NewShift(
+                name_date_day=employee_name,
+                filename=file_path,
+                monday=shifts[0],
+                tuesday=shifts[1],
+                wednesday=shifts[2],
+                thursday=shifts[3],
+                friday=shifts[4]
+            )
+
+            # Set the day_* attributes dynamically
+            for day_num, shift in enumerate(shifts[5:], start=1):
+                setattr(new_shift_entry, f"day_{day_num}", shift)
+
+            # Add the new entry to the database session
+            db.session.add(new_shift_entry)
+
+        # Commit the changes to the database
+        db.session.commit()
+
 
 
 def addemployee(file_path):

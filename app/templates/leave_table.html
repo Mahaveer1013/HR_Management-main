@@ -16,47 +16,63 @@
     <script>
         const socket = io();
     </script>
-    <nav class="nav-bar">
-        <div class="toogle-sidebar">
-            <i class="fas fa-bars"></i>
-        </div>
-        <ul class="options">
-            <li class="option notification-menu">
-                <span class="notification-icon">
-                    <i class="fas fa-bell"></i>
-                     Notifications
-                </span>
-                <ul class="notification-list">
-                    <li class="notifications">
-                        <span class="user-name">Employee 1</span>
-                        <div class="message-subject">leave Notification</div>
-                    </li>
-                    <li class="notifications">
-                        <span class="user-name">Employee 1</span>
-                        <div class="message-subject">leave Notification</div>
-                    </li>
-                    <li class="notifications">
-                        <span class="user-name">Employee 1</span>
-                        <div class="message-subject">leave Notification</div>
-                    </li>
-                    <li class="notifications">
-                        <span class="user-name">Employee 1</span>
-                        <div class="message-subject">leave Notification</div>
-                    </li>
-                    <li class="notifications">
-                        <span class="user-name">Employee 1</span>
-                        <div class="message-subject">leave Notification</div>
-                    </li>
-                </ul>
-            </li>
-            <li class="option logout">
-                <span>
-                    <i class="fas fa-sign-out-alt"></i>
-                    Logout
-                </span>
-            </li>
-        </ul>
-    </nav>
+<nav class="nav-bar">
+    <div class="toogle-sidebar">
+      <i class="fas fa-bars"></i>
+    </div>
+    <ul class="options">
+      <div class="add-notification" style="display: none;">
+          <button class="add">add</button>
+      </div>
+      <li class="option">
+          <div class="notification-btn">
+            <span class>
+              <i class="fas fa-bell"></i>
+              <span class="icon-text">
+                  notification
+              </span>
+          </span>
+          <div class="notify-count">
+              <p class="count">0</p>
+          </div>
+          </div>
+          
+          <ul class="notifications">
+              {% if notification %}
+              {% for single_notification in notification %}
+              <li class="notification-box">
+                  <div class="profile">
+                      <img src="icon/default-girl.jpeg" alt="default user">
+                  </div>
+                  <div class="notification-details">
+                      <div class="notification-user-name">
+                          {{single_notification.permission}}-{{single_notification.emp_name}}
+                      </div>
+                      <div class="notification-message">
+                          {{single_notification.reason}}
+                      </div>
+                  </div>
+              </li>
+              {% endfor %}
+              {% else %}
+              <li class="notification-box">
+                <div class="notification-message">
+                    No notification Available
+                </div>
+              </li>
+              {% endif %}
+          </ul>
+      </li>
+      <a href="/logout" class="option logout">
+          <span>
+              <i class="fas fa-sign-out-alt"></i>
+              <span class="icon-text">
+                  Logout
+              </span>
+          </span>
+      </a>
+  </ul>
+  </nav>
     <aside class="sidebar">
         <ul class="side-menu">
             <form class="menu-option active">
@@ -142,8 +158,8 @@
                             <tr>
                                 <td>#{{leave_permission.emp_id}}</td>
                                 <td>{{leave_permission.emp_name}}</td>
-                                <td>11/08/2003</td>
-                                <td>11:55 PM</td>
+                                <td>{{leave_permission.date.strftime('%d-%m-%Y') }}</td>
+                                <td>{{leave_permission.date.strftime('%H:%M') }}</td>
                                 <td>{{leave_permission.from_date}}</td>
                                 <td>{{leave_permission.to_date}}</td>
                                 <td>{{leave_permission.reason}}</td>
@@ -163,13 +179,16 @@
                         {% endfor %}
                         <script>
                             socket.on('leave', function (leave_permission) {
+                                
+                                var currentDate = new Date().toLocaleDateString();
+                                var currentTime = new Date().toLocaleTimeString();
                                 var tbody = document.getElementById('leave-table');
                                 tbody.innerHTML += `
                                     <tr>
                                     <td>${leave_permission.emp_id}</td>
                                     <td>${leave_permission.emp_name}</td>
-                                    <td>11:35</td>
-                                    <td>11:35</td>
+                                    <td>${currentDate}</td>
+                                    <td>${currentTime}</td>
                                     <td>${leave_permission.from_date}</td>
                                     <td>${leave_permission.to_date}</td>
                                     <td>${leave_permission.reason}</td>
@@ -187,5 +206,96 @@
 
     </main>
     <script src="static/js/script.js"></script>
+        <script>
+const bell_btn = document.querySelector(".notification-btn");
+const notifications = document.querySelector(".notifications");
+const add = document.querySelector(".add");
+let count = notifications.childElementCount;
+
+if (count > 9) {
+    count = "9+";
+}
+
+document.querySelector(".count").innerHTML = 0;
+
+document.addEventListener('click', function (event) {
+    const isNotificationButton = event.target.closest('.notification-btn');
+    const isNotificationContainer = event.target.closest('.notifications');
+
+    if (!(isNotificationButton || isNotificationContainer)) {
+        notifications.classList.remove("active");
+        console.log("Removed active class");
+    }
+});
+
+bell_btn.addEventListener("click", () => {
+    notifications.classList.toggle("active");
+    console.log("Toggled active class");
+});
+      socket.on("late", function (late_permission) {
+          console.log("Received late_permission:",late_permission.emp_id);
+          const notifications = document.querySelector(".notifications");
+          
+          if(document.querySelector(".notification-box")){
+                const default_notification=document.querySelector(".notification-box");
+                default_notification.style.display = "none";
+                default_notification.disabled = true;
+              }
+                  notifications.innerHTML += `
+                  <li class="notification-box">
+                      <div class="profile">
+                          <img src="icon/default.jpeg" alt="default user">
+                      </div>
+                      <div class="notification-details">
+                          <div class="notification-user-name">
+                              ${late_permission.emp_name}-<a href="/leave_table"> <i class="fas fa-eye eye-icon"></i></a>
+                          </div>
+                          <div class="notification-message">
+                              Late - ${late_permission.reason}
+                          </div>
+                      </div>
+                  </li>
+                                `;
+                  let count = notifications.childElementCount;
+                  if (count > 10) {
+                      count = "9+";
+                  }
+
+                  document.querySelector(".count").innerHTML = count-1;
+                });
+
+          socket.on("leave", function (leave_permission) {
+              console.log("Received leave_permission:",leave_permission.emp_id);
+              const notifications = document.querySelector(".notifications");
+
+              if(document.querySelector(".notification-box")){
+                const default_notification=document.querySelector(".notification-box");
+                default_notification.style.display = "none";
+                default_notification.disabled = true;
+              }
+
+                  notifications.innerHTML += `
+                  <li class="notification-box">
+                      <div class="profile">
+                          <img src="icon/default.jpeg" alt="default user">
+                      </div>
+                      <div class="notification-details">
+                          <div class="notification-user-name">
+                              ${leave_permission.emp_name}-<a href="/leave_table"> <i class="fas fa-eye eye-icon"></i></a>
+                          </div>
+                          <div class="notification-message">
+                              Leave - ${leave_permission.reason}
+                          </div>
+                      </div>
+                  </li>
+                                `;
+                  let count = notifications.childElementCount;
+                  if (count > 10) {
+                      count = "9+";
+                  }
+
+                  document.querySelector(".count").innerHTML = count-1;
+                });
+    </script>
 </body>
 </html>

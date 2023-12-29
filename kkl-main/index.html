@@ -15,38 +15,61 @@
             <i class="fas fa-bars"></i>
         </div>
         <ul class="options">
-            <li class="option notification-menu">
-                <span class="notification-icon">
+            <div class="add-notification">
+                <button class="add">add</button>
+            </div>
+            <li class="option notification-btn ">
+                <span>
                     <i class="fas fa-bell"></i>
-                     Notifications
+                    <span class="icon-text">
+                        notification
+                    </span>
                 </span>
-                <ul class="notification-list">
-                    <li class="notifications">
-                        <span class="user-name">Employee 1</span>
-                        <div class="message-subject">Late Notification</div>
+                <div class="notify-count">
+                    <p class="count">0</p>
+                </div>
+                
+                <ul class="notifications">
+                    <li class="notification-box">
+                            <div class="notification-message">
+                                notification here
+                            </div>
                     </li>
-                    <li class="notifications">
-                        <span class="user-name">Employee 1</span>
-                        <div class="message-subject">Late Notification</div>
+                    <!-- <li class="notification-box">
+                        <div class="profile">
+                            <img src="icon/default.jpeg" alt="default user">
+                        </div>
+                        <div class="notification-details">
+                            <div class="notification-user-name">
+                                User name 1
+                            </div>
+                            <div class="notification-message">
+                                requesting leave regarding late for today bla bla bla
+                            </div>
+                        </div>
                     </li>
-                    <li class="notifications">
-                        <span class="user-name">Employee 1</span>
-                        <div class="message-subject">Late Notification</div>
-                    </li>
-                    <li class="notifications">
-                        <span class="user-name">Employee 1</span>
-                        <div class="message-subject">Late Notification</div>
-                    </li>
-                    <li class="notifications">
-                        <span class="user-name">Employee 1</span>
-                        <div class="message-subject">Late Notification</div>
-                    </li>
+                    <li class="notification-box">
+                        <div class="profile">
+                            <img src="icon/default-girl.jpeg" alt="default user">
+                        </div>
+                        <div class="notification-details">
+                            <div class="notification-user-name">
+                                User name 1
+                            </div>
+                            <div class="notification-message">
+                                requesting leave regarding late for today bla bla bla
+                                requesting leave regarding late for today bla bla bla
+                            </div>
+                        </div>
+                    </li> -->
                 </ul>
             </li>
             <li class="option logout">
                 <span>
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    <span class="icon-text">
+                        Logout
+                    </span>
                 </span>
             </li>
         </ul>
@@ -80,7 +103,7 @@
         </ul>
     </aside>
 
-    <section class="notification-model">
+    <section class="notification-model" style="display: none;">
         <div class="inner-model">
             <div class="model-nav">
                 <button class="model-close">
@@ -209,7 +232,7 @@
                 <div class="frame-header">
                     <div class="frame-details">
                         <p class="shift name"><span class="tag">A</span> ~ shift</p>
-                        <p class="frame-name">Attendance</p>
+                        <p class="frame-name">Today Attendance</p>
                     </div>
                     <div class="frame-options">
                         <button type="button" class="download">
@@ -242,12 +265,21 @@
                 </div>
             </div>
         </section>
+<!-- Include SheetJS library -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+
+<!-- Include FileSaver.js -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+
+
+
 
         <section class="frame month-attendance" style="display: none;">
             <div class="inner-frame">
                 <div class="frame-header">
                     <div class="frame-details">
-                        <p class="frame-name">Attendance</p>
+                        <p class="frame-name">Month Attendance</p>
                         <p class="shift name"><span class="tag">A</span> ~ shift</p>
                     </div>
                     <div class="frame-search">
@@ -460,6 +492,8 @@
         </section>
 
     </main>
-    <script src="js/script.js"></script>
+        <!-- Include xlsx library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+<script src="js/script.js"></script>
 </body>
 </html>

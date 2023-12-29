@@ -31,40 +31,48 @@
         <i class="fas fa-bars"></i>
       </div>
       <ul class="options">
-        <li class="option notification-menu">
-          <span class="notification-icon">
-            <i class="fas fa-bell"></i>
-            Notifications
-          </span>
-          <ul class="notification-list">
-            <li class="notifications">
-              <span class="user-name">Employee 1</span>
-              <div class="message-subject">Late Notification</div>
+        <div class="add-notification" style="display: none">
+          <button class="add">add</button>
+        </div>
+        <li class="option">
+          <div class="notification-btn">
+            <span class>
+              <i class="fas fa-bell"></i>
+              <span class="icon-text"> notification </span>
+            </span>
+            <div class="notify-count">
+              <p class="count">0</p>
+            </div>
+          </div>
+
+          <ul class="notifications">
+            {% if notification %} {% for single_notification in notification %}
+            <li class="notification-box">
+              <div class="profile">
+                <img src="icon/default-girl.jpeg" alt="default user" />
+              </div>
+              <div class="notification-details">
+                <div class="notification-user-name">
+                  {{single_notification.permission}}-{{single_notification.emp_name}}
+                </div>
+                <div class="notification-message">
+                  {{single_notification.reason}}
+                </div>
+              </div>
             </li>
-            <li class="notifications">
-              <span class="user-name">Employee 1</span>
-              <div class="message-subject">Late Notification</div>
+            {% endfor %} {% else %}
+            <li class="notification-box">
+              <div class="notification-message">No notification Available</div>
             </li>
-            <li class="notifications">
-              <span class="user-name">Employee 1</span>
-              <div class="message-subject">Late Notification</div>
-            </li>
-            <li class="notifications">
-              <span class="user-name">Employee 1</span>
-              <div class="message-subject">Late Notification</div>
-            </li>
-            <li class="notifications">
-              <span class="user-name">Employee 1</span>
-              <div class="message-subject">Late Notification</div>
-            </li>
+            {% endif %}
           </ul>
         </li>
-        <li class="option logout">
+        <a href="/logout" class="option logout">
           <span>
             <i class="fas fa-sign-out-alt"></i>
-            Logout
+            <span class="icon-text"> Logout </span>
           </span>
-        </li>
+        </a>
       </ul>
     </nav>
     <aside class="sidebar">
@@ -114,7 +122,6 @@
         </div>
       </header>
 
-
       <link rel="stylesheet" href="static/css/late.css" />
 
       <section class="late-table-section">
@@ -152,8 +159,8 @@
               <tr>
                 <td>#{{late_permission.emp_id}}</td>
                 <td>{{late_permission.emp_name}}</td>
-                <td>11/08/2003</td>
-                <td>11:55 PM</td>
+                <td>{{late_permission.date.strftime('%d-%m-%Y') }}</td>
+                <td>{{late_permission.date.strftime('%H:%M') }}</td>
                 <td>{{late_permission.from_time}}</td>
                 <td>{{late_permission.to_time}}</td>
                 <td>{{late_permission.reason}}</td>
@@ -178,13 +185,15 @@
                     "Received late_permission:",
                     late_permission.emp_id
                   );
+                  var currentDate = new Date().toLocaleDateString();
+                  var currentTime = new Date().toLocaleTimeString();
                   var tbody = document.getElementById("late-table");
                   tbody.innerHTML += `
                                     <tr>
                                     <td>${late_permission.emp_id}</td>
                                     <td>${late_permission.emp_name}</td>
-                                    <td>11:35</td>
-                                    <td>12:25</td>
+                                    <td>${currentDate}</td>
+                                    <td>${currentTime}</td>
                                     <td>${late_permission.from_time}</td>
                                     <td>${late_permission.to_time}</td>
                                     <td>${late_permission.reason}</td>
@@ -209,5 +218,120 @@
       </section>
     </main>
     <script src="static/js/script.js"></script>
+    <script>
+      const bell_btn = document.querySelector(".notification-btn");
+      const notifications = document.querySelector(".notifications");
+      const lateNotification = document.querySelector(".late-notification");
+      const add = document.querySelector(".add");
+      let count = notifications.childElementCount;
+
+      if (count > 9) {
+        count = "9+";
+      }
+
+      document.querySelector(".count").innerHTML = 0;
+
+      document.addEventListener("click", function (event) {
+        const isNotificationButton = event.target.closest(".notification-btn");
+        const isNotificationContainer = event.target.closest(".notifications");
+
+        if (!(isNotificationButton || isNotificationContainer)) {
+          notifications.classList.remove("active");
+          console.log("Removed active class");
+        }
+      });
+
+      bell_btn.addEventListener("click", () => {
+        notifications.classList.toggle("active");
+        console.log("Toggled active class");
+      });
+
+      lateNotification.addEventListener("click", function () {
+        // Make a request to the /late-table route
+        fetch("/late_table", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            // Add any other headers if needed
+          },
+          // Add any other options if needed
+        })
+          .then((response) => response.json()) // Assuming the response is JSON
+          .then((data) => {
+            // Handle the data as needed
+            console.log("Response from /late_table:", data);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      });
+
+      socket.on("late", function (late_permission) {
+        console.log("Received late_permission:", late_permission.emp_id);
+        const notifications = document.querySelector(".notifications");
+
+        if (document.querySelector(".notification-box")) {
+          const default_notification =
+            document.querySelector(".notification-box");
+          default_notification.style.display = "none";
+          default_notification.disabled = true;
+        }
+        notifications.innerHTML += `
+                        <a href="/late_table" class="notification-box">
+                            <div class="profile">
+                                <img src="icon/default.jpeg" alt="default user">
+                            </div>
+                            <div class="notification-details late-notification">
+                                <div class="notification-user-name">
+                                    ${late_permission.emp_name}-<a href="/leave_table"> <i class="fas fa-eye eye-icon"></i></a>
+                                </div>
+                                <div class="notification-message">
+                                    Late - ${late_permission.reason}
+                                </div>
+                            </div>
+                        </a>
+                                      `;
+        let count = notifications.childElementCount;
+        if (count > 10) {
+          count = "9+";
+        }
+
+        document.querySelector(".count").innerHTML = count - 1;
+      });
+
+      socket.on("leave", function (leave_permission) {
+        console.log("Received leave_permission:", leave_permission.emp_id);
+        const notifications = document.querySelector(".notifications");
+
+        if (document.querySelector(".notification-box")) {
+          const default_notification =
+            document.querySelector(".notification-box");
+          default_notification.style.display = "none";
+          default_notification.disabled = true;
+        }
+
+        notifications.innerHTML += `
+                        <li class="notification-box">
+                            <div class="profile">
+                                <img src="icon/default.jpeg" alt="default user">
+                            </div>
+                            <div class="notification-details">
+                                <div class="notification-user-name">
+                                    ${leave_permission.emp_name}-<a href="/leave_table"> <i class="fas fa-eye eye-icon"></i></a>
+                                </div>
+                                <div class="notification-message">
+                                    Leave - ${leave_permission.reason}
+                                </div>
+                            </div>
+                        </li>
+                                      `;
+        let count = notifications.childElementCount;
+        if (count > 10) {
+          count = "9+";
+        }
+
+        document.querySelector(".count").innerHTML = count - 1;
+      });
+    </script>
   </body>
 </html>
