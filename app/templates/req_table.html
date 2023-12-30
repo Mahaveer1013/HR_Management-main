@@ -191,27 +191,14 @@
                     `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}`;
                 }
                   var currentDate = new Date().toLocaleDateString();
-                  var hours = currentDate.getHours();
-                  var minutes = currentDate.getMinutes();
-                  var ampm = hours >= 12 ? 'PM' : 'AM';
-
-                  // Convert hours to 12-hour format
-                  hours = hours % 12;
-                  hours = hours ? hours : 12; // Handle midnight (0 hours)
-
-                  // Format hours and minutes as two digits (e.g., 09, 03)
-                  hours = hours < 10 ? '0' + hours : hours;
-                  minutes = minutes < 10 ? '0' + minutes : minutes;
-
-                  var formattedTime = hours + ':' + minutes + ' ' + ampm;
-
+                  var currentTime = new Date().toLocaleTimeString();
                   var tbody = document.getElementById("late-table");
                   tbody.innerHTML += `
                                     <tr>
                                     <td>#${permission.emp_id}</td>
                                     <td>${permission.emp_name}</td>
                                     <td>${currentDate}</td>
-                                    <td>${formattedTime}</td>
+                                    <td>${currentTime}</td>
                                     <td>${permission.from_time}</td>
                                     <td>${permission.to_time}</td>
                                     <td>${permission.reason}</td>
