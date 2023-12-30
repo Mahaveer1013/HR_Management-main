@@ -389,7 +389,7 @@ def handle_lateform_callback(lateDet):
         db.session.add(new_request)
         db.session.commit()
         print("new request : ",new_request.from_time)
-        all_latedata = {'emp_id':emp_id, 'emp_name':emp_name, 'reason':reason, 'from_time':from_time, 'to_time':to_time, 'status':status, 'hr_approval':hr_approval}
+        all_latedata = {'emp_id':emp_id, 'emp_name':emp_name, 'reason':reason, 'from_time':from_time, 'to_time':to_time,'approved_by':approved_by, 'status':status, 'hr_approval':hr_approval}
         print("EMP ID : ",all_latedata['emp_id'])
 
         emit('late', all_latedata, broadcast=True)
