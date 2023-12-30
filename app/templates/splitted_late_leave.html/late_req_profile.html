@@ -161,7 +161,7 @@
                     <span class="btn-text">Download</span>
                 </a>
                 {% if late_details.approval == 'Approved' %}
-                    <button class="model-btn latetable approve" name='approve' onclick="Late_Approve({{late_details.emp_id}})" id='approve' disabled>
+                    <button class="model-btn latetable approve" name='approve' onclick="Late_Approve({{late_details.emp_id}})" id='approve'>
                         <i class="fas fa-check-circle"></i>
                         <span class="btn-text">Approved</span>
                     </button>
@@ -173,7 +173,7 @@
                 {% endif %}
 
                 {% if late_details.approval == 'Declined' %}
-                <button class="model-btn latetable decline" name='decline' onclick="Late_Decline({{late_details.emp_id}})" id='decline' disabled>
+                <button class="model-btn latetable decline" name='decline' onclick="Late_Decline({{late_details.emp_id}})" id='decline'>
                     <i class="fas fa-times-circle"></i>
                     <span class="btn-text">Denied</span>
                 </button>
@@ -280,6 +280,7 @@
                 }
             });
         </script>
+
 
     </section>
 

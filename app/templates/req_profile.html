@@ -86,7 +86,7 @@
     <section class="notification-model">
         <div class="inner-model">
             <div class="model-nav">
-                <button class="model-close" onclick="window.location.href='/late_table';">
+                <button class="model-close" onclick="window.location.href='/{{req_details.permission_type.lower()}}_req_table';">
                     <i class="fas fa-times-circle"></i>
                 </button>
             </div>
@@ -158,30 +158,30 @@
                     <span class="btn-text">Download</span>
                 </a>
                 {% if req_details.approval == 'Approved' %}
-                    <button class="model-btn latetable approve" name='approve' onclick="handleApproval('{{req_details.emp_id}}', 'approve')" id='approve' disabled>
+                    <button class="model-btn latetable approved" style="background-color:green ;" name='approve' onclick="handleApproval('{{permission_type}}','approve',{{req_details.emp_id}})" id='approve' disabled>
                         <i class="fas fa-check-circle"></i>
                         <span class="btn-text">Approved</span>
                     </button>
                 {% else %}
-                    <button class="model-btn latetable approve" name='approve' onclick="handleApproval('{{req_details.emp_id}}', 'approve')" id='approve'>
+                    <button class="model-btn latetable approve" name='approve' onclick="handleApproval('{{permission_type}}','approve',{{req_details.emp_id}})" id='approve'>
                         <i class="fas fa-check-circle"></i>
                         <span class="btn-text">Approve</span>
                     </button>
                 {% endif %}
 
                 {% if req_details.approval == 'Declined' %}
-                    <button class="model-btn latetable decline" name='decline' onclick="handleApproval('{{req_details.emp_id}}', 'decline')" id='decline' disabled>
+                    <button class="model-btn latetable declined" style="background-color:red ;" name='decline' onclick="handleApproval('{{permission_type}}','decline',{{req_details.emp_id}})" id='decline' disabled>
                         <i class="fas fa-times-circle"></i>
-                        <span class="btn-text">Denied</span>
+                        <span class="btn-text">Declined</span>
                     </button>
                 {% else %}
-                    <button class="model-btn latetable decline" name='decline' onclick="handleApproval('{{req_details.emp_id}}', 'decline')" id='decline'>
+                    <button class="model-btn latetable decline" name='decline' onclick="handleApproval('{{permission_type}}','decline',{{req_details.emp_id}})" id='decline'>
                         <i class="fas fa-times-circle"></i>
-                        <span class="btn-text">Deny</span>
+                        <span class="btn-text">Decline</span>
                     </button>
                 {% endif %}
 
-                {% if req_details.approved_by != 'Pending' %}
+                <!-- {% if req_details.approved_by != 'Pending' %}
                     {% if req_details.approval == 'Approved' %}
                         <div class="approval_by" id="approval_by">
                             It is Approved by {{req_details.approved_by}}
@@ -192,14 +192,14 @@
                         </div>
                     {% endif %}
 
-                {% endif %}
+                {% endif %} -->
 
             </div>
         </div>
 
         <!-- ... (head and body sections) ... -->
 
-<script>
+<!-- <script>
     const socket = io();
 
     function handleApproval(data, actionType, buttonText, buttonId) {
@@ -214,9 +214,9 @@
                 <i class="fas fa-check-circle"></i>
                 <span class="btn-text">${buttonText}</span>
             `);
-            document.getElementById("approval_by").innerHTML = (`
-                <p> ${actionType} by ${userId} </p>
-            `);
+            // document.getElementById("approval_by").innerHTML = (`
+            //     <p> ${actionType} by ${userId} </p>
+            // `);
         }
     }
 
@@ -238,7 +238,7 @@
             body: JSON.stringify({ userId: userId }),
         })
         .then(response => response.json())
-        .then(data => handleApproval(data, actionType, "Approved", `${actionType.toLowerCase()}_approve`))
+        .then(data => handleApproval(data, actionType, "Approved", `approve`))
         .catch(error => {
             console.error(`Error (${actionType}):`, error);
         });
@@ -252,7 +252,7 @@
             body: JSON.stringify({ userId: userId }),
         })
         .then(response => response.json())
-        .then(data => handleApproval(data, actionType, "Denied", `${actionType.toLowerCase()}_approve`))
+        .then(data => handleApproval(data, actionType, "Denied", `approve`))
         .catch(error => {
             console.error(`Error (${actionType}):`, error);
         });
@@ -260,20 +260,55 @@
 
     function handleSocketEvent(actionType) {
         socket.on(`${actionType.toLowerCase()}_hr_approval_update`, function(data) {
-            handleSocketUpdate(data, actionType, "Approved", `${actionType.toLowerCase()}_approve`);
+            handleSocketUpdate(data, actionType, "Approved", `approve`);
         });
     }
-
-    // Usage example
-    handleSocketEvent("Late");
-    handleSocketEvent("Leave");
 
     document.querySelector(".print-btn").addEventListener("click", function () {
     window.print();
 });
-</script>
+</script> -->
 
 <!-- ... (rest of the HTML) ... -->
+
+<script>
+    const socket = io();
+
+    function handleApproval(permissionType, action, userId) {
+        fetch(`/${permissionType.toLowerCase()}_${action.toLowerCase()}`, {
+            method: "POST",
+            body: JSON.stringify({ userId }),
+        }).then(response => response.json())
+            .then(data => {
+                console.log('Response from server:', data);
+                const status = data.hr_approval;
+                const elementId = `${action.toLowerCase()}`;
+                document.getElementById(elementId).disabled = true;
+                document.getElementById(elementId === 'approve' ? 'decline' : 'approve').disabled = false;
+                document.getElementById(elementId).innerHTML = `<i class="fas fa-${status === 'Approved' ? 'check-circle' : 'times-circle'}"></i><span class="btn-text">${status}</span>`;
+                document.getElementById(elementId === 'approve' ? 'decline' : 'approve').innerHTML = `<i class="fas fa-${status === 'Declined' ? 'check-circle' : 'times-circle'}"></i><span class="btn-text">${status === 'Approved' ? 'Decline' : 'Approve'}</span>`;
+                document.getElementById(elementId).style.backgroundColor = status === 'Approved' ? 'green' : 'red';
+                document.getElementById(elementId === 'approve' ? 'decline' : 'approve').style.backgroundColor = '#3f3f3f';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    socket.on('${permission_type}_hr_approval_update', function(data) {
+        console.log(`${permission_type} details socket`);
+        const userId = data.userId;
+        const hrApproval = data.hr_approval;
+        //document.getElementById(hrApproval.toLowerCase()).textContent = hrApproval;
+        if (hrApproval=='Approved'){
+            document.getElementById('approve').textContent = hrApproval;
+        }
+        else if (hrApproval=='Declined'){
+            document.getElementById('decline').textContent = hrApproval;
+        }
+    });
+
+</script>
 
 
     </section>
@@ -289,7 +324,7 @@
             </div>
         </header>
         
-        <menu class="table-menu" style="display: none;">
+        <menu class="table-menu">
             <ul class="btn-container">
                 <li class="tag-btn click active">Today Attendance</li>
                 <li class="tag-btn click">Yesterday Attendance</li>
@@ -304,9 +339,6 @@
                 </select>
             </ul>
         </menu>
-
-        <link rel="stylesheet" href="css/attendance.css">
-        <!-- <iframe src="" frameborder="0" class="frame"></iframe> -->
         
         <section class="frame today-attendance" style="display: flex;">
             <div class="inner-frame">
@@ -356,7 +388,7 @@
 
 
 
-        <section class="frame month-attendance" style="display: none;">
+        <section class="frame month-attendance">
             <div class="inner-frame">
                 <div class="frame-header">
                     <div class="frame-details">
@@ -389,11 +421,7 @@
             </div>
         </section>
 
-        <script src="js/attendance.js"></script>
-        <script src="attendance.js"></script>
-
-        <link rel="stylesheet" href="css/late.css">
-        <section class="late-table-section" style="display: none;">
+        <section class="-table-section">
             <header class="late-header">
                 <div class="frame-header">
                     <div class="frame-details">
@@ -478,7 +506,7 @@
 
         </section>
 
-        <section class="late-table-section" style="display: none;">
+        <section class="late-table-section">
             <header class="late-header">
                 <div class="frame-header">
                     <div class="frame-details">
@@ -563,7 +591,7 @@
 
         </section>
 
-        <section class="shift-section" style="display: none;">
+        <section class="shift-section">
             <header class="shift-header">
                 <div class="frame-details">
                     <p class="shift-section name"><span class="tag">A</span> ~ shift</p>

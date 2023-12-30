@@ -1,18 +1,37 @@
-let date = new Date();
+function updateClock() {
+  let date = new Date();
 
-let currentDate = date.getDate();
-let currentMonth = date.getMonth();
-let currentYear = date.getFullYear();
+  let currentDate = date.getDate();
+  let currentMonth = date.getMonth() + 1; // Months are zero-based, so add 1
+  let currentYear = date.getFullYear();
 
-let displayDate = currentDate + "/" + currentMonth + "/" + currentYear;
+  let hours = date.getHours();
+  let minutes = date.getMinutes();
+  let seconds = date.getSeconds();
+  let ampm = hours >= 12 ? 'PM' : 'AM';
 
-if (document.querySelector(".date")) {
-  document.querySelector(".date").innerHTML = `Date : ${displayDate}`;
+  // Convert hours to 12-hour format
+  hours = hours % 12;
+  hours = hours ? hours : 12; // Handle midnight (12 AM)
+
+  let displayDate = `${currentDate}/${currentMonth}/${currentYear}`;
+  let displayTime = `${hours}:${minutes}:${seconds} ${ampm}`;
+
+  if (document.querySelector(".date")) {
+    document.querySelector(".date").innerHTML = `Date: ${displayDate}`;
+  }
+
+  if (document.querySelector(".time")) {
+    document.querySelector(".time").innerHTML = `Time: ${displayTime}`;
+  }
 }
 
-if (document.querySelector(".time")) {
-  document.querySelector(".time").innerHTML = `Time : ${displayDate}`;
-}
+// Update the clock every second (1000 milliseconds)
+setInterval(updateClock, 1000);
+
+// Initial call to display the time immediately
+updateClock();
+
 
 // const notification_icon = document.querySelector(".notification-icon");
 

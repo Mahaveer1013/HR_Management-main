@@ -28,6 +28,7 @@ def login():
                     login_user(dbemail, remember=True)
 
                     if dbemail.role == "admin":
+                        session['admin_id']=dbemail.emp_id
                         employee =Attendance.query.order_by(Attendance.id)   
                         late_permission=late.query.order_by(late.date).all()
                         leave_permission=leave.query.order_by(leave.date).all()

@@ -683,7 +683,7 @@ def late_req_profile():
     reason = request.args.get('reason')
     req_id = request.args.get('req_id')
 
-    user = Emp_login.query.order_by(Emp_login.date.desc()).first()
+    user = Emp_login.query.filter_by(emp_id=emp_id).order_by(Emp_login.date.desc()).first()
     user_late=late.query.filter_by(id=req_id).first()
     req_date=user_late.date.strftime("%d-%m-%y")
     req_time=user_late.date.strftime("%H:%M")
@@ -703,8 +703,8 @@ def late_req_profile():
         'emp_id':emp_id,
         'emp_name':emp_name
     }
-    session['late_details']=req_details
-    return render_template("req_profile.html",req_details=req_details)#,late_permission_dict=late_permission_dict
+    session['details']=req_details
+    return render_template("req_profile.html",req_details=req_details,permission_type='Late')#,late_permission_dict=late_permission_dict
 
 @views.route('/leave_req_profile')
 @login_required
@@ -716,19 +716,19 @@ def leave_req_profile():
     reason = request.args.get('reason')
     req_id = request.args.get('req_id')
     
-    user = Emp_login.query.order_by(Emp_login.date.desc()).first()
-    user=leave.query.filter_by(id=req_id).first()
+    user = Emp_login.query.filter_by(emp_id=emp_id).order_by(Emp_login.date.desc()).first()
+    user_leave=leave.query.filter_by(id=req_id).first()
     req_date=user.date.strftime("%d-%m-%y")
     req_time=user.date.strftime("%H:%M")
     req_details={
         'late_balance':user.late_balance,
         'leave_balance':user.leave_balance,
-        'approval':user.hr_approval,
+        'approval':user_leave.hr_approval,
         'req_date':req_date,
         'req_time':req_time,
         'from_time':from_time,
         'to_time':to_time,
-        'approved_by':user.approved_by,
+        'approved_by':user_leave.approved_by,
         'ph_number':user.phoneNumber,
         'permission_type':'Leave',
         'id':user.id,
@@ -736,8 +736,8 @@ def leave_req_profile():
         'emp_id':emp_id,
         'emp_name':emp_name
     }
-    session['leave_details']=req_details
-    return render_template("req_profile.html",req_details=req_details)#,late_permission_dict=late_permission_dict
+    session['details']=req_details
+    return render_template("req_profile.html",req_details=req_details,permission_type='Leave')#,late_permission_dict=late_permission_dict
 
 
 # @views.route('/late_req_approve',methods=['POST','GET'])
@@ -786,10 +786,11 @@ def late_approve():
     userID = user_data['userId']
     user = late.query.filter_by(emp_id=userID).first()
     current_user = 'hr'
-    
+    admin_id=session.get('admin_id')
     if current_user == 'hr':
+        user.status='Approved'
         user.hr_approval = 'Approved'
-        user.approved_by=userID
+        user.approved_by=admin_id
         db.session.commit()
         
         # Create a JSON response
@@ -806,10 +807,12 @@ def late_decline():
     user_data = json.loads(request.data)
     userID = user_data['userId']
     user = late.query.filter_by(emp_id=userID).first()
+    admin_id=session.get('admin_id')
     current_user = 'hr'
     if current_user == 'hr':
+        user.status='Declined'
         user.hr_approval = 'Declined'
-        user.approved_by=userID
+        user.approved_by=admin_id
         db.session.commit()
         
         # Create a JSON response
@@ -829,9 +832,11 @@ def leave_approve():
     user = leave.query.filter_by(emp_id=userID).first()
     print(" USER : ",user)
     current_user='hr'
+    admin_id=session.get('admin_id')
     if current_user=='hr':
+        user.status='Approved'
         user.hr_approval='Approved'
-        user.approved_by=userID
+        user.approved_by=admin_id
         db.session.commit()
         response_data = {
             'approved_by':user.approved_by,
@@ -848,9 +853,11 @@ def leave_decline():
     user = leave.query.filter_by(emp_id=userID).first()
     print(" USER : ",user)
     current_user='hr'
+    admin_id=session.get('admin_id')
     if current_user=='hr':
         user.hr_approval='Declined'
-        user.approved_by=userID
+        user.status='Declined'
+        user.approved_by=admin_id
         db.session.commit()
         response_data = {
             'approved_by':user.approved_by,
@@ -859,3 +866,4 @@ def leave_decline():
         }
 
         return jsonify(response_data)
+
