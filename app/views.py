@@ -348,6 +348,7 @@ def handle_lateform_callback(lateDet):
     reason=lateDet['reason']
     from_time=lateDet['from_time']
     to_time=lateDet['to_time']
+    status='Pending'
     approved_by='hod name'
     hr_approval='Pending'
 
@@ -384,11 +385,11 @@ def handle_lateform_callback(lateDet):
 
     try:
         print(reason)
-        new_request=late(emp_id=emp_id,emp_name=emp_name,reason=reason,from_time=from_time,to_time=to_time,approved_by=approved_by,hr_approval=hr_approval)
+        new_request=late(emp_id=emp_id,emp_name=emp_name,reason=reason,from_time=from_time,to_time=to_time,approved_by=approved_by,status=status,hr_approval=hr_approval)
         db.session.add(new_request)
         db.session.commit()
-        print("new request : ",new_request.emp_id)
-        all_latedata = {'emp_id':emp_id, 'emp_name':emp_name, 'reason':reason, 'from_time':from_time, 'to_time':to_time, 'hr_approval':hr_approval}
+        print("new request : ",new_request.from_time)
+        all_latedata = {'emp_id':emp_id, 'emp_name':emp_name, 'reason':reason, 'from_time':from_time, 'to_time':to_time, 'status':status, 'hr_approval':hr_approval}
         print("EMP ID : ",all_latedata['emp_id'])
 
         emit('late', all_latedata, broadcast=True)
@@ -411,6 +412,7 @@ def handle_leaveform_callback(leaveDet):
     reason=leaveDet['reason']
     from_time=leaveDet['from_time']
     to_time=leaveDet['to_time']
+    status='Pending'
     approved_by='Hod Name'
     hr_approval='Pending'
 
@@ -448,10 +450,10 @@ def handle_leaveform_callback(leaveDet):
             print("Sms Not Sent")
 
     try:
-        new_request=leave(emp_id=emp_id,emp_name=emp_name,reason=reason,from_time=from_time,to_time=to_time,approved_by=approved_by,hr_approval=hr_approval)
+        new_request=leave(emp_id=emp_id,emp_name=emp_name,reason=reason,from_time=from_time,to_time=to_time,approved_by=approved_by,status=status,hr_approval=hr_approval)
         db.session.add(new_request)
         db.session.commit()
-        all_leaveData={'emp_id':emp_id,'emp_name':emp_name,'reason':reason,'from_time':from_time,'to_time':to_time,'approved_by':approved_by,'hr_approval':hr_approval}
+        all_leaveData={'emp_id':emp_id,'emp_name':emp_name,'reason':reason,'from_time':from_time,'to_time':to_time,'approved_by':approved_by,'status':status,'hr_approval':hr_approval}
         print(all_leaveData)
         emit('leave', all_leaveData, broadcast=True)
 
@@ -543,16 +545,14 @@ def attendance_table():
 @login_required
 def late_req_table():
     permission_details=late.query.order_by(late.date).all()
-    permission_type="Late"
-    return render_template("req_table.html",permission=permission_details,permission_type=permission_type)
+    return render_template("req_table.html",permission=permission_details,permission_type='Late')
 
 
 @views.route("/leave_req_table")
 @login_required
 def leave_req_table():
-    permission_type="Leave"
     permission_details=leave.query.order_by(leave.date).all()
-    return render_template("req_table.html",permission=permission_details,permission_type=permission_type)
+    return render_template("req_table.html",permission=permission_details,permission_type='Leave')
 
 
 @views.route("/today_attendance")
@@ -620,9 +620,69 @@ def last_month_attendance():
 #     session['leave_details']=leave_details
 #     return render_template("leave_req_profile.html",leave_details=leave_details)#,late_permission_dict=late_permission_dict
 
-@views.route('/late_req_profile/<int:emp_id>/<string:emp_name>/<string:from_time>/<string:to_time>/<string:reason>/<int:req_id>')
+# @views.route('/late_req_profile/<int:emp_id>/<string:emp_name>/<string:from_time>/<string:to_time>/<string:reason>/<int:req_id>')
+# @login_required
+# def late_req_profile(emp_id, emp_name, from_time, to_time, reason,req_id):
+#     user = Emp_login.query.order_by(Emp_login.date.desc()).first()
+#     user_late=late.query.filter_by(id=req_id).first()
+#     req_date=user_late.date.strftime("%d-%m-%y")
+#     req_time=user_late.date.strftime("%H:%M")
+#     req_details={
+#         'late_balance':user.late_balance,
+#         'leave_balance':user.leave_balance,
+#         'approval':user_late.hr_approval,
+#         'req_date':req_date,
+#         'req_time':req_time,
+#         'from_time':from_time,
+#         'to_time':to_time,
+#         'approved_by':user_late.approved_by,
+#         'permission_type':'Late',
+#         'ph_number':user.phoneNumber,
+#         'id':user.id,
+#         'reason':reason,
+#         'emp_id':emp_id,
+#         'emp_name':emp_name
+#     }
+#     session['late_details']=req_details
+#     return render_template("req_profile.html",req_details=req_details)#,late_permission_dict=late_permission_dict
+
+# @views.route('/leave_req_profile/<int:emp_id>/<string:emp_name>/<string:from_time>/<string:to_time>/<string:reason>/<int:req_id>')
+# @login_required
+# def leave_req_profile(emp_id, emp_name, from_time, to_time, reason,req_id):
+#     user = Emp_login.query.order_by(Emp_login.date.desc()).first()
+#     user=leave.query.filter_by(id=req_id).first()
+#     req_date=user.date.strftime("%d-%m-%y")
+#     req_time=user.date.strftime("%H:%M")
+#     req_details={
+#         'late_balance':user.late_balance,
+#         'leave_balance':user.leave_balance,
+#         'approval':user.hr_approval,
+#         'req_date':req_date,
+#         'req_time':req_time,
+#         'from_time':from_time,
+#         'to_time':to_time,
+#         'approved_by':user.approved_by,
+#         'ph_number':user.phoneNumber,
+#         'permission_type':'Leave',
+#         'id':user.id,
+#         'reason':reason,
+#         'emp_id':emp_id,
+#         'emp_name':emp_name
+#     }
+#     session['leave_details']=req_details
+#     return render_template("req_profile.html",req_details=req_details)#,late_permission_dict=late_permission_dict
+
+@views.route('/late_req_profile')
 @login_required
-def late_req_profile(emp_id, emp_name, from_time, to_time, reason,req_id):
+def late_req_profile():
+
+    emp_id = request.args.get('emp_id')
+    emp_name = request.args.get('emp_name')
+    from_time = request.args.get('from_time')
+    to_time = request.args.get('to_time')
+    reason = request.args.get('reason')
+    req_id = request.args.get('req_id')
+
     user = Emp_login.query.order_by(Emp_login.date.desc()).first()
     user_late=late.query.filter_by(id=req_id).first()
     req_date=user_late.date.strftime("%d-%m-%y")
@@ -646,9 +706,16 @@ def late_req_profile(emp_id, emp_name, from_time, to_time, reason,req_id):
     session['late_details']=req_details
     return render_template("req_profile.html",req_details=req_details)#,late_permission_dict=late_permission_dict
 
-@views.route('/leave_req_profile/<int:emp_id>/<string:emp_name>/<string:from_time>/<string:to_time>/<string:reason>/<int:req_id>')
+@views.route('/leave_req_profile')
 @login_required
-def leave_req_profile(emp_id, emp_name, from_time, to_time, reason,req_id):
+def leave_req_profile():
+    emp_id = request.args.get('emp_id')
+    emp_name = request.args.get('emp_name')
+    from_time = request.args.get('from_time')
+    to_time = request.args.get('to_time')
+    reason = request.args.get('reason')
+    req_id = request.args.get('req_id')
+    
     user = Emp_login.query.order_by(Emp_login.date.desc()).first()
     user=leave.query.filter_by(id=req_id).first()
     req_date=user.date.strftime("%d-%m-%y")

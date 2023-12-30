@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_socketio import SocketIO
 import os
+import pytz
+from datetime import datetime
 
 # Initialize SQLAlchemy
 db = SQLAlchemy()
@@ -21,6 +23,8 @@ def create_app():
     db_path = os.path.abspath(os.path.dirname(__file__))
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(db_path, DB_NAME)}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'timezone': 'Asia/Kolkata'}
+
 
     # Define paths for file uploads
     UPLOAD_FOLDER = os.path.join(app.root_path, 'static/img/profile')
@@ -58,6 +62,10 @@ def create_app():
     create_database(app)
 
     return app
+
+def get_current_time():
+    tz = pytz.timezone('Asia/Kolkata')
+    return datetime.now(tz)
 
 # Function to create the database if it doesn't exist
 def create_database(app):

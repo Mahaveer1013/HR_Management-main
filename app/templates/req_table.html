@@ -147,11 +147,12 @@
               <th>Time</th>
               <th>From</th>
               <th>To</th>
-              <th>Subject</th>
               <th>Message</th>
+              <th>Status</th>
+              <th>By</th>
               <th>Action</th>
             </thead>
-            <tbody class="{{permission_type}}-table" id="{{permission_type}}-table">
+            <tbody class="{{permission_type.lower()}}-table" id="{{permission_type.lower()}}-table">
               {% for permission in permission %}
               <tr>
                 <td>#{{permission.emp_id}}</td>
@@ -161,10 +162,11 @@
                 <td>{{permission.from_time}}</td>
                 <td>{{permission.to_time}}</td>
                 <td>{{permission.reason}}</td>
-                <td>{{permission.reason}}</td>
+                <td>{{permission.status}}</td>
+                <td>{{permission.approved_by}}</td>
                 <td>
                   <a
-                    href="{{ url_for('views.req_profile',
+                    href="{{ url_for('views.' + permission_type.lower() + '_req_profile',
                                      emp_id=permission.emp_id,
                                      emp_name=permission.emp_name,
                                      from_time=permission.from_time,
@@ -177,25 +179,48 @@
               </tr>
               {% endfor %}
               <script>
+
+
                 socket.on("late", function (permission) {
                   console.log(
                     "Received permission:",
                     permission.emp_id
                   );
+                  function generateUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by) {
+                  return "{{ url_for('views.' + permission_type.lower() + '_req_profile') }}" +
+                    `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}`;
+                }
                   var currentDate = new Date().toLocaleDateString();
-                  var currentTime = new Date().toLocaleTimeString();
+                  var hours = currentDate.getHours();
+                  var minutes = currentDate.getMinutes();
+                  var ampm = hours >= 12 ? 'PM' : 'AM';
+
+                  // Convert hours to 12-hour format
+                  hours = hours % 12;
+                  hours = hours ? hours : 12; // Handle midnight (0 hours)
+
+                  // Format hours and minutes as two digits (e.g., 09, 03)
+                  hours = hours < 10 ? '0' + hours : hours;
+                  minutes = minutes < 10 ? '0' + minutes : minutes;
+
+                  var formattedTime = hours + ':' + minutes + ' ' + ampm;
+
                   var tbody = document.getElementById("late-table");
                   tbody.innerHTML += `
                                     <tr>
-                                    <td>${permission.emp_id}</td>
+                                    <td>#${permission.emp_id}</td>
                                     <td>${permission.emp_name}</td>
                                     <td>${currentDate}</td>
-                                    <td>${currentTime}</td>
+                                    <td>${formattedTime}</td>
                                     <td>${permission.from_time}</td>
                                     <td>${permission.to_time}</td>
                                     <td>${permission.reason}</td>
-                                    <td>${permission.reason}</td>
-                                    <td><i class="fas fa-eye"></i></td>
+                                    <td>${permission.status}</td>
+                                    <td>${permission.approved_by}</td>
+                                    <td><a href="${generateUrl(permission.emp_id, permission.emp_name, permission.from_time, permission.to_time, permission.reason, permission.id,permission.status,permission.approved_by)}">
+                                      <i class="fas fa-eye"></i>
+                                      </a>
+                                    </td>
                                     </tr>
                                 `;
                                 console.log("Received permission:", permission.emp_id);
@@ -235,6 +260,10 @@
                   var currentDate = new Date().toLocaleDateString();
                   var currentTime = new Date().toLocaleTimeString();
                   var tbody = document.getElementById("leave-table");
+                  function generateUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by) {
+                  return "{{ url_for('views.' + permission_type.lower() + '_req_profile') }}" +
+                    `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}`;
+                }
                   tbody.innerHTML += `
                                     <tr>
                                     <td>${permission.emp_id}</td>
@@ -244,8 +273,13 @@
                                     <td>${permission.from_time}</td>
                                     <td>${permission.to_time}</td>
                                     <td>${permission.reason}</td>
-                                    <td>${permission.reason}</td>
-                                    <td><i class="fas fa-eye"></i></td>
+                                    <td>${permission.status}</td>
+                                    <td>${permission.approved_by}</td>
+                                    <td>
+                                      <a href="${generateUrl(permission.emp_id, permission.emp_name, permission.from_time, permission.to_time, permission.reason, permission.id,permission.status,permission.approved_by)}">
+                                        <i class="fas fa-eye"></i>
+                                      </a>
+                                    </td>
                                     </tr>
                                 `;
                                 console.log("Received permission:", permission.emp_id);
@@ -299,7 +333,7 @@
     <script>
       const bell_btn = document.querySelector(".notification-btn");
       const notifications = document.querySelector(".notifications");
-      const lateNotification = document.querySelector(".late-notification");
+      // const lateNotification = document.querySelector(".late-notification");
       let count = notifications.childElementCount;
 
       if (count > 9) {
@@ -323,25 +357,25 @@
         console.log("Toggled active class");
       });
 
-      lateNotification.addEventListener("click", function () {
-        // Make a request to the /late-table route
-        fetch("/late_req_table", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            // Add any other headers if needed
-          },
-          // Add any other options if needed
-        })
-          .then((response) => response.json()) // Assuming the response is JSON
-          .then((data) => {
-            // Handle the data as needed
-            console.log("Response from /late_req_table:", data);
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-      });
+      // lateNotification.addEventListener("click", function () {
+      //   // Make a request to the /late-table route
+      //   fetch("/late_req_table", {
+      //     method: "GET",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       // Add any other headers if needed
+      //     },
+      //     // Add any other options if needed
+      //   })
+      //     .then((response) => response.json()) // Assuming the response is JSON
+      //     .then((data) => {
+      //       // Handle the data as needed
+      //       console.log("Response from /late_req_table:", data);
+      //     })
+      //     .catch((error) => {
+      //       console.error("Error:", error);
+      //     });
+      // });
 
     //   socket.on("late", function (permission) {
     //     console.log("Received permission:", permission.emp_id);
