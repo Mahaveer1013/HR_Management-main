@@ -784,7 +784,7 @@ def leave_req_profile():
 def late_approve():
     user_data = json.loads(request.data)
     userID = user_data['userId']
-    user = late.query.filter_by(emp_id=userID).first()
+    user = late.query.filter_by(id=userID).first()
     current_user = 'hr'
     admin_id=session.get('admin_id')
     if current_user == 'hr':
@@ -806,7 +806,7 @@ def late_approve():
 def late_decline():
     user_data = json.loads(request.data)
     userID = user_data['userId']
-    user = late.query.filter_by(emp_id=userID).first()
+    user = late.query.filter_by(id=userID).first()
     admin_id=session.get('admin_id')
     current_user = 'hr'
     if current_user == 'hr':
@@ -829,7 +829,7 @@ def late_decline():
 def leave_approve():
     user_data = json.loads(request.data)
     userID = user_data['userId']
-    user = leave.query.filter_by(emp_id=userID).first()
+    user = leave.query.filter_by(id=userID).first()
     print(" USER : ",user)
     current_user='hr'
     admin_id=session.get('admin_id')
@@ -850,7 +850,7 @@ def leave_approve():
 def leave_decline():
     user = json.loads(request.data)
     userID = user['userId']
-    user = leave.query.filter_by(emp_id=userID).first()
+    user = leave.query.filter_by(id=userID).first()
     print(" USER : ",user)
     current_user='hr'
     admin_id=session.get('admin_id')
@@ -867,3 +867,18 @@ def leave_decline():
 
         return jsonify(response_data)
 
+@views.route("/req_notify")
+def req_notify():
+    notify_id=request.args.get("notify_id")
+    permission=request.args.get('permission')
+    print("Notify id : ", notify_id)
+    print("permission : ",permission)
+    notify = notifications.query.filter_by(permission=permission, id=notify_id).first()
+    print(notify)
+    if notify:
+        # If the notifications exists, delete it
+        db.session.delete(notify)
+        db.session.commit()
+
+    # Redirect to a different page after handling the notification
+    return redirect(url_for('views.' + permission.lower() + '_req_table'))

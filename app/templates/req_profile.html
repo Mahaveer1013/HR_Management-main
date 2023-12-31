@@ -158,24 +158,24 @@
                     <span class="btn-text">Download</span>
                 </a>
                 {% if req_details.approval == 'Approved' %}
-                    <button class="model-btn latetable approved" style="background-color:green ;" name='approve' onclick="handleApproval('{{permission_type}}','approve',{{req_details.emp_id}})" id='approve' disabled>
+                    <button class="model-btn latetable approved" style="background-color:green ;" name='approve' onclick="handleApproval('{{permission_type}}','approve',{{req_details.id}})" id='approve' disabled>
                         <i class="fas fa-check-circle"></i>
                         <span class="btn-text">Approved</span>
                     </button>
                 {% else %}
-                    <button class="model-btn latetable approve" name='approve' onclick="handleApproval('{{permission_type}}','approve',{{req_details.emp_id}})" id='approve'>
+                    <button class="model-btn latetable approve" name='approve' onclick="handleApproval('{{permission_type}}','approve',{{req_details.id}})" id='approve'>
                         <i class="fas fa-check-circle"></i>
                         <span class="btn-text">Approve</span>
                     </button>
                 {% endif %}
 
                 {% if req_details.approval == 'Declined' %}
-                    <button class="model-btn latetable declined" style="background-color:red ;" name='decline' onclick="handleApproval('{{permission_type}}','decline',{{req_details.emp_id}})" id='decline' disabled>
+                    <button class="model-btn latetable declined" style="background-color:red ;" name='decline' onclick="handleApproval('{{permission_type}}','decline',{{req_details.id}})" id='decline' disabled>
                         <i class="fas fa-times-circle"></i>
                         <span class="btn-text">Declined</span>
                     </button>
                 {% else %}
-                    <button class="model-btn latetable decline" name='decline' onclick="handleApproval('{{permission_type}}','decline',{{req_details.emp_id}})" id='decline'>
+                    <button class="model-btn latetable decline" name='decline' onclick="handleApproval('{{permission_type}}','decline',{{req_details.id}})" id='decline'>
                         <i class="fas fa-times-circle"></i>
                         <span class="btn-text">Decline</span>
                     </button>
