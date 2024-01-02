@@ -50,7 +50,15 @@
                     </div>
                     <div class="notification-details">
                         <div class="notification-user-name">
-                            {{single_notification.emp_name}} <a href="{{ url_for('views.req_notify', notify_id=single_notification.id,permission=single_notification.permission) }}"> <i class="fas fa-eye eye-icon"></i></a>
+                            {{single_notification.emp_name}} <a
+                            href="{{ url_for('views.' + permission_type.lower() + '_req_profile',
+                                             emp_id=single_notification.emp_id,
+                                             emp_name=single_notification.emp_name,
+                                             from_time=single_notification.from_time,
+                                             to_time=single_notification.to_time,
+                                             reason=single_notification.reason,
+                                             req_id=single_notification.id )}}">
+                             <i class="fas fa-eye eye-icon"></i></a>
                         </div>
                         <div class="notification-message">
                           {{single_notification.permission}}-{{single_notification.reason}}
@@ -59,7 +67,7 @@
                 </li>
                 {% endfor %}
                 {% else %}
-                <li class="notification-box">
+                <li class="notification-box" data-display="none">
                   <div class="notification-message">
                       No notification Available
                   </div>
@@ -177,7 +185,8 @@
                                      from_time=permission.from_time,
                                      to_time=permission.to_time,
                                      reason=permission.reason,
-                                     req_id=permission.id )}}"
+                                     req_id=permission.id,
+                                     back_page=${permission_type.lower()}_table)}},"
                     ><i class="fas fa-eye"></i
                   ></a>
                 </td>
@@ -192,8 +201,9 @@
                     permission.emp_id
                   );
                   function generateUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by) {
+                    backpage='late_table'
                   return "{{ url_for('views.' + permission_type.lower() + '_req_profile') }}" +
-                    `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}`;
+                    `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${backpage}`;
                 }
                   var currentDate = new Date().toLocaleDateString();
                   var currentTime = new Date().toLocaleTimeString();
@@ -253,8 +263,9 @@
                   var currentTime = new Date().toLocaleTimeString();
                   var tbody = document.getElementById("leave-table");
                   function generateUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by) {
+                    backpage='leave_table'
                   return "{{ url_for('views.' + permission_type.lower() + '_req_profile') }}" +
-                    `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}`;
+                    `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${backpage}`;
                 }
                   tbody.innerHTML += `
                                     <tr>
@@ -310,13 +321,21 @@
               <script>
                 const bell_btn = document.querySelector(".notification-btn");
 const notifications = document.querySelector(".notifications");
-let count = Array.from(notifications.children).filter(element => !element.classList.contains('notification-box')).length;
+const all_notifications = notifications.querySelectorAll("li");
+      function countNotification() {
+        let count = notifications.childElementCount;
+        if (count > 9) {
+          count = "9+";
+        }
+        all_notifications.forEach((element) => {
+          if (element.getAttribute("data-display") == "none") {
+            parseInt(count--);
+          }
+        });
+        document.querySelector(".count").innerHTML = count;
+      }
 
-if (count > 9) {
-    count = "9+";
-}
-
-document.querySelector(".count").innerHTML = count;
+      countNotification();
 
 document.addEventListener('click', function (event) {
     const isNotificationButton = event.target.closest('.notification-btn');
@@ -350,20 +369,22 @@ bell_btn.addEventListener("click", () => {
                       </div>
                       <div class="notification-details">
                           <div class="notification-user-name">
-                              ${late_permission.emp_name} <a href="/late_req_table"> <i class="fas fa-eye eye-icon"></i></a>
+                              ${late_permission.emp_name} <a href="{{ url_for('views.late_req_profile',
+                                             emp_id=late_permission.emp_id,
+                                             emp_name=late_permission.emp_name,
+                                             from_time=late_permission.from_time,
+                                             to_time=late_permission.to_time,
+                                             reason=late_permission.reason,
+                                             req_id=late_permission.id,
+                                             back_page=late_table )}}"> <i class="fas fa-eye eye-icon"></i></a>
                           </div>
                           <div class="notification-message">
                               Late - ${late_permission.reason}
                           </div>
                       </div>
                   </li>
-                                `;
-                  count = Array.from(notifications.children).filter(element => !element.classList.contains('notification-box')).length;
-                  if (count > 10) {
-                      count = "9+";
-                  }
-
-                  document.querySelector(".count").innerHTML = count;
+                                    `;
+                countNotification();
                 });
 
           socket.on("leave", function (leave_permission) {
@@ -383,7 +404,14 @@ bell_btn.addEventListener("click", () => {
                       </div>
                       <div class="notification-details leave-notification">
                           <div class="notification-user-name">
-                              ${leave_permission.emp_name}-<a href="/leave_req_table"> <i class="fas fa-eye eye-icon"></i></a>
+                              ${leave_permission.emp_name}-<a href="{{ url_for('views.leave_req_profile',
+                                             emp_id=leave_permission.emp_id,
+                                             emp_name=leave_permission.emp_name,
+                                             from_time=leave_permission.from_time,
+                                             to_time=leave_permission.to_time,
+                                             reason=leave_permission.reason,
+                                             req_id=leave_permission.id,
+                                             back_page=leave_table )}}"> <i class="fas fa-eye eye-icon"></i></a>
                           </div>
                           <div class="notification-message">
                               Leave - ${leave_permission.reason}
@@ -391,12 +419,7 @@ bell_btn.addEventListener("click", () => {
                       </div>
                   </li>
                                 `;
-                  count = Array.from(notifications.children).filter(element => !element.classList.contains('notification-box')).length;
-                  if (count > 10) {
-                      count = "9+";
-                  }
-
-                  document.querySelector(".count").innerHTML = count;
+                countNotification();
                 });
 
               </script>
