@@ -120,8 +120,11 @@ class notifications(db.Model):
     timestamp = db.Column(db.DateTime, default=db.func.now())
     emp_name = db.Column(db.String(255))
     permission = db.Column(db.String(255))
+    emp_id = db.Column(db.Integer)
+    from_time = db.Column(db.String(150), nullable=False)
+    to_time = db.Column(db.String(150), nullable=False)
+    req_id = db.Column(db.Integer)
     
-
 # Late Model (Example)
 class late(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -136,6 +139,7 @@ class late(db.Model, UserMixin):
     hr_approval = db.Column(db.String(150), default='Pending')
     date = db.Column(db.DateTime(timezone=True), default=func.now())
 # Leave Model (Example)
+    
 class leave(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     emp_id = db.Column(db.Integer)

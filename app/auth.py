@@ -23,8 +23,9 @@ def login():
             password = request.form.get('password')
 
             dbemail = Emp_login.query.filter_by(email=email).first()
-            if dbemail:
+            if dbemail :
                 if check_password_hash(dbemail.password, password):
+
                     login_user(dbemail, remember=True)
 
                     if dbemail.role == "admin":
@@ -115,8 +116,12 @@ def signup():
         role = request.form['role']
         # Check if a user with the same email already exists
         existing_user = Emp_login.query.filter_by(email=email).first()
+        existing_id = Emp_login.query.filter_by(id=emp_id).first()
         if existing_user:
             flash('Email already exists. Please choose a different email.')
+            
+        elif existing_id:
+            flash('Emp id already exists. Please choose a different email.')
         else:
             # Create a new Emp_login object and add it to the database
             new_login = Emp_login(email=email, password=generate_password_hash(password), role=role,phoneNumber=ph_number, emp_id=emp_id, name=name)

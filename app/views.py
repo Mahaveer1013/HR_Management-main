@@ -352,10 +352,6 @@ def handle_lateform_callback(lateDet):
     approved_by='hod name'
     hr_approval='Pending'
 
-    new_request=notifications(reason=reason,emp_name=emp_name,permission='Late')
-    db.session.add(new_request)
-    db.session.commit()
-
     user=Emp_login.query.filter_by(emp_id=emp_id).first()
     if user:
         user.late_balance -= 1
@@ -392,8 +388,12 @@ def handle_lateform_callback(lateDet):
         all_latedata = {'emp_id':emp_id, 'emp_name':emp_name, 'reason':reason, 'from_time':from_time, 'to_time':to_time,'approved_by':approved_by, 'status':status, 'hr_approval':hr_approval}
         print("EMP ID : ",all_latedata['emp_id'])
 
-        emit('late', all_latedata, broadcast=True)
+        recently_added_row = late.query.order_by(desc(late.id)).first()
+        new_request=notifications(reason=reason,emp_name=emp_name,permission='Late',from_time=from_time,to_time=to_time,req_id=recently_added_row.id)
+        db.session.add(new_request)
+        db.session.commit()
 
+        emit('late', all_latedata, broadcast=True)
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")
@@ -416,10 +416,6 @@ def handle_leaveform_callback(leaveDet):
     approved_by='Hod Name'
     hr_approval='Pending'
 
-    
-    new_request=notifications(reason=reason,emp_name=emp_name,permission='Leave')
-    db.session.add(new_request)
-    db.session.commit()
 
     user=Emp_login.query.filter_by(emp_id=emp_id).first()
     if user:
@@ -455,6 +451,12 @@ def handle_leaveform_callback(leaveDet):
         db.session.commit()
         all_leaveData={'emp_id':emp_id,'emp_name':emp_name,'reason':reason,'from_time':from_time,'to_time':to_time,'approved_by':approved_by,'status':status,'hr_approval':hr_approval}
         print(all_leaveData)
+
+        recently_added_row = leave.query.order_by(desc(leave.id)).first()
+        new_request=notifications(reason=reason,emp_name=emp_name,permission='Leave',from_time=from_time,to_time=to_time,req_id=recently_added_row.id)
+        db.session.add(new_request)
+        db.session.commit()
+
         emit('leave', all_leaveData, broadcast=True)
 
     except Exception as e:
@@ -548,14 +550,12 @@ def late_req_table():
     permission_details=late.query.order_by(late.date).all()
     return render_template("req_table.html",notification=notification,permission=permission_details,permission_type='Late')
 
-
 @views.route("/leave_req_table")
 @login_required
 def leave_req_table():
     notification=notifications.query.order_by(notifications.timestamp).all()
     permission_details=leave.query.order_by(leave.date).all()
     return render_template("req_table.html",notification=notification,permission=permission_details,permission_type='Leave')
-
 
 @views.route("/today_attendance")
 @login_required
