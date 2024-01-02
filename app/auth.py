@@ -28,13 +28,8 @@ def login():
                     login_user(dbemail, remember=True)
 
                     if dbemail.role == "admin":
-                        session['admin_id']=dbemail.emp_id
-                        employee =Attendance.query.order_by(Attendance.id)   
-                        late_permission=late.query.order_by(late.date).all()
-                        leave_permission=leave.query.order_by(leave.date).all()
-                        return render_template('admin.html',employee=employee,late_permission=late_permission,leave_permission=leave_permission)
-
-                        #return redirect(url_for('views.admin'))
+                        session['admin_name']=dbemail.name
+                        return redirect(url_for('views.admin'))
 
                     elif dbemail.role == "employee":
                         session['emp_id'] = dbemail.emp_id

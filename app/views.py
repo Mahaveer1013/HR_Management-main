@@ -544,15 +544,17 @@ def attendance_table():
 @views.route("/late_req_table")
 @login_required
 def late_req_table():
+    notification=notifications.query.order_by(notifications.timestamp).all()
     permission_details=late.query.order_by(late.date).all()
-    return render_template("req_table.html",permission=permission_details,permission_type='Late')
+    return render_template("req_table.html",notification=notification,permission=permission_details,permission_type='Late')
 
 
 @views.route("/leave_req_table")
 @login_required
 def leave_req_table():
+    notification=notifications.query.order_by(notifications.timestamp).all()
     permission_details=leave.query.order_by(leave.date).all()
-    return render_template("req_table.html",permission=permission_details,permission_type='Leave')
+    return render_template("req_table.html",notification=notification,permission=permission_details,permission_type='Leave')
 
 
 @views.route("/today_attendance")

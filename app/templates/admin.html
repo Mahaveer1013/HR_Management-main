@@ -202,9 +202,8 @@
     <script>
 const bell_btn = document.querySelector(".notification-btn");
 const notifications = document.querySelector(".notifications");
-let count = Array.from(notifications.children)
-  .filter(element => !element.classList.contains('notification-box'))
-  .length;
+let count = Array.from(notifications.children).filter(element => !element.classList.contains('notification-box'))
+.length;
 
 if (count > 9) {
     count = "9+";
