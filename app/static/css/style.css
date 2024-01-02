@@ -635,3 +635,108 @@ a.eye-icon {
   right: 0;
   top: -10px;
 }
+.upload-model{
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+
+.close-btn{
+  position: absolute;
+  right: 5px;
+  top:   5px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.inner-upload{
+  min-width: 300px;
+  max-width: calc(100% - 10px);
+  margin-top: 50px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 5px;
+  box-shadow: 0px 0px 10px #3e3e3e;
+  border: 2px solid #a7a7a7;
+  height: 400px;
+  position: relative;
+}
+
+.input-field{
+  padding: 15px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 15px;
+  min-height: 40px;
+}
+
+.label{
+  padding: 15px 10px;
+  min-width: 130px;
+  border-radius: 5px;
+  border: 2px solid #c5c5c5;
+  display: flex;
+  gap: 10px;
+  cursor: pointer;
+  transition: all .5s;
+}
+
+.label:hover{
+  box-shadow: 0px 0px 10px #707070;
+}
+
+.label.active{
+  border: 2px solid green;
+  box-shadow: 0px 0px 5px green;
+}
+
+input[type="radio"]{
+  accent-color: green;
+}
+
+.drag-drop-area {
+  border: 2px dashed #ccc;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  height: 200px;
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+}
+
+.drag-drop-area:hover {
+  border-color: #aaa;
+}
+
+/* Optional: Styling for when a file is being dragged over the area */
+.drag-over {
+  border-color: #000;
+}
+
+
+#cancel-btn, #upload-btn{
+  margin-top: 15px;
+  padding: 15px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+  min-width: 100px;
+}
+
+#cancel-btn{
+  background: orange;
+}
+
+#upload-btn{
+  background: green;
+  color: #fff;
+}

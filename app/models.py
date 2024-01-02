@@ -119,7 +119,7 @@ class notifications(db.Model):
     reason = db.Column(db.String(255))
     timestamp = db.Column(db.DateTime, default=db.func.now())
     emp_name = db.Column(db.String(255))
-    permission = db.Column(db.String(255))
+    permission_type = db.Column(db.String(255))
     emp_id = db.Column(db.Integer)
     from_time = db.Column(db.String(150), nullable=False)
     to_time = db.Column(db.String(150), nullable=False)

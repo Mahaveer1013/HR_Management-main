@@ -30,6 +30,7 @@ def login():
 
                     if dbemail.role == "admin":
                         session['admin_name']=dbemail.name
+                        print("admin session created")
                         return redirect(url_for('views.admin'))
 
                     elif dbemail.role == "employee":
@@ -82,6 +83,7 @@ def login():
 @auth.route('/login', methods=['POST', 'GET'])
 def admin_login():
     session.clear()
+    print("session cleared")
     return render_template("login.html")
 
 @auth.route('/logout', methods=['GET', 'POST'])

@@ -385,13 +385,14 @@ def handle_lateform_callback(lateDet):
         db.session.add(new_request)
         db.session.commit()
         print("new request : ",new_request.from_time)
-        all_latedata = {'emp_id':emp_id, 'emp_name':emp_name, 'reason':reason, 'from_time':from_time, 'to_time':to_time,'approved_by':approved_by, 'status':status, 'hr_approval':hr_approval}
-        print("EMP ID : ",all_latedata['emp_id'])
-
+        
         recently_added_row = late.query.order_by(desc(late.id)).first()
-        new_request=notifications(reason=reason,emp_name=emp_name,permission='Late',from_time=from_time,to_time=to_time,req_id=recently_added_row.id)
+        new_request=notifications(emp_id=emp_id,reason=reason,emp_name=emp_name,permission_type='Late',from_time=from_time,to_time=to_time,req_id=recently_added_row.id)
         db.session.add(new_request)
         db.session.commit()
+
+        all_latedata = {'emp_id':emp_id, 'emp_name':emp_name, 'reason':reason, 'from_time':from_time, 'to_time':to_time,'approved_by':approved_by, 'status':status, 'hr_approval':hr_approval}
+        print("EMP ID : ",all_latedata['emp_id'])
 
         emit('late', all_latedata, broadcast=True)
 
@@ -449,13 +450,14 @@ def handle_leaveform_callback(leaveDet):
         new_request=leave(emp_id=emp_id,emp_name=emp_name,reason=reason,from_time=from_time,to_time=to_time,approved_by=approved_by,status=status,hr_approval=hr_approval)
         db.session.add(new_request)
         db.session.commit()
-        all_leaveData={'emp_id':emp_id,'emp_name':emp_name,'reason':reason,'from_time':from_time,'to_time':to_time,'approved_by':approved_by,'status':status,'hr_approval':hr_approval}
-        print(all_leaveData)
 
         recently_added_row = leave.query.order_by(desc(leave.id)).first()
-        new_request=notifications(reason=reason,emp_name=emp_name,permission='Leave',from_time=from_time,to_time=to_time,req_id=recently_added_row.id)
+        new_request=notifications(emp_id=emp_id,reason=reason,emp_name=emp_name,permission_type='Leave',from_time=from_time,to_time=to_time,req_id=recently_added_row.id)
         db.session.add(new_request)
         db.session.commit()
+        
+        all_leaveData={'emp_id':emp_id,'emp_name':emp_name,'reason':reason,'from_time':from_time,'to_time':to_time,'approved_by':approved_by,'status':status,'hr_approval':hr_approval}
+        print(all_leaveData)
 
         emit('leave', all_leaveData, broadcast=True)
 
@@ -684,6 +686,14 @@ def late_req_profile():
     to_time = request.args.get('to_time')
     reason = request.args.get('reason')
     req_id = request.args.get('req_id')
+    back_page=request.args.get('back_page')
+
+    notify = notifications.query.filter_by(permission_type='Late', emp_id=emp_id,from_time=from_time,to_time=to_time,reason=reason).first()
+    print(notify)
+    if notify:
+        # If the notifications exists, delete it
+        db.session.delete(notify)
+        db.session.commit()
 
     user = Emp_login.query.filter_by(emp_id=emp_id).order_by(Emp_login.date.desc()).first()
     user_late=late.query.filter_by(id=req_id).first()
@@ -700,10 +710,11 @@ def late_req_profile():
         'approved_by':user_late.approved_by,
         'permission_type':'Late',
         'ph_number':user.phoneNumber,
-        'id':user.id,
+        'id':user_late.id,
         'reason':reason,
         'emp_id':emp_id,
-        'emp_name':emp_name
+        'emp_name':emp_name,
+        'back_page':back_page
     }
     session['details']=req_details
     return render_template("req_profile.html",req_details=req_details,permission_type='Late')#,late_permission_dict=late_permission_dict
@@ -717,11 +728,31 @@ def leave_req_profile():
     to_time = request.args.get('to_time')
     reason = request.args.get('reason')
     req_id = request.args.get('req_id')
+    back_page=request.args.get('back_page')
+
+    notify = notifications.query.filter_by(permission_type='Leave', emp_id=emp_id,from_time=from_time,to_time=to_time,reason=reason).first()
+    print(notify)
+    if notify:
+        # If the notifications exists, delete it
+        db.session.delete(notify)
+        db.session.commit()
+
+    # if(request.args.get("notify_id")):
+    #     notify_id=request.args.get("notify_id")
+    #     permission=request.args.get('permission')
+    #     print("Notify id : ", notify_id)
+    #     print("permission : ",permission)
+    #     notify = notifications.query.filter_by(permission=permission, id=notify_id).first()
+    #     print(notify)
+    #     if notify:
+    #         # If the notifications exists, delete it
+    #         db.session.delete(notify)
+    #         db.session.commit()
     
     user = Emp_login.query.filter_by(emp_id=emp_id).order_by(Emp_login.date.desc()).first()
     user_leave=leave.query.filter_by(id=req_id).first()
-    req_date=user.date.strftime("%d-%m-%y")
-    req_time=user.date.strftime("%H:%M")
+    req_date=user_leave.date.strftime("%d-%m-%y")
+    req_time=user_leave.date.strftime("%H:%M")
     req_details={
         'late_balance':user.late_balance,
         'leave_balance':user.leave_balance,
@@ -733,10 +764,11 @@ def leave_req_profile():
         'approved_by':user_leave.approved_by,
         'ph_number':user.phoneNumber,
         'permission_type':'Leave',
-        'id':user.id,
+        'id':user_leave.id,
         'reason':reason,
         'emp_id':emp_id,
-        'emp_name':emp_name
+        'emp_name':emp_name,
+        'back_page':back_page
     }
     session['details']=req_details
     return render_template("req_profile.html",req_details=req_details,permission_type='Leave')#,late_permission_dict=late_permission_dict
@@ -788,13 +820,14 @@ def late_approve():
     userID = user_data['userId']
     user = late.query.filter_by(id=userID).first()
     current_user = 'hr'
-    admin_id=session.get('admin_id')
+    admin_name=session.get('admin_name')
+    print("current admin: ", admin_name)
     if current_user == 'hr':
         user.status='Approved'
         user.hr_approval = 'Approved'
-        user.approved_by=admin_id
+        user.approved_by=admin_name
         db.session.commit()
-        
+
         # Create a JSON response
         response_data = {
             'approved_by':user.approved_by,
@@ -809,12 +842,12 @@ def late_decline():
     user_data = json.loads(request.data)
     userID = user_data['userId']
     user = late.query.filter_by(id=userID).first()
-    admin_id=session.get('admin_id')
+    admin_name=session.get('admin_name')
     current_user = 'hr'
     if current_user == 'hr':
         user.status='Declined'
         user.hr_approval = 'Declined'
-        user.approved_by=admin_id
+        user.approved_by=admin_name
         db.session.commit()
         
         # Create a JSON response
@@ -834,11 +867,11 @@ def leave_approve():
     user = leave.query.filter_by(id=userID).first()
     print(" USER : ",user)
     current_user='hr'
-    admin_id=session.get('admin_id')
+    admin_name=session.get('admin_name')
     if current_user=='hr':
         user.status='Approved'
         user.hr_approval='Approved'
-        user.approved_by=admin_id
+        user.approved_by=admin_name
         db.session.commit()
         response_data = {
             'approved_by':user.approved_by,
@@ -855,11 +888,11 @@ def leave_decline():
     user = leave.query.filter_by(id=userID).first()
     print(" USER : ",user)
     current_user='hr'
-    admin_id=session.get('admin_id')
+    admin_name=session.get('admin_name')
     if current_user=='hr':
         user.hr_approval='Declined'
         user.status='Declined'
-        user.approved_by=admin_id
+        user.approved_by=admin_name
         db.session.commit()
         response_data = {
             'approved_by':user.approved_by,
@@ -869,18 +902,18 @@ def leave_decline():
 
         return jsonify(response_data)
 
-@views.route("/req_notify")
-def req_notify():
-    notify_id=request.args.get("notify_id")
-    permission=request.args.get('permission')
-    print("Notify id : ", notify_id)
-    print("permission : ",permission)
-    notify = notifications.query.filter_by(permission=permission, id=notify_id).first()
-    print(notify)
-    if notify:
-        # If the notifications exists, delete it
-        db.session.delete(notify)
-        db.session.commit()
+# @views.route("/req_notify")
+# def req_notify():
+#     notify_id=request.args.get("notify_id")
+#     permission=request.args.get('permission')
+#     print("Notify id : ", notify_id)
+#     print("permission : ",permission)
+#     notify = notifications.query.filter_by(permission=permission, id=notify_id).first()
+#     print(notify)
+#     if notify:
+#         # If the notifications exists, delete it
+#         db.session.delete(notify)
+#         db.session.commit()
 
-    # Redirect to a different page after handling the notification
-    return redirect(url_for('views.' + permission.lower() + '_req_table'))
+#     # Redirect to a different page after handling the notification
+#     return redirect(url_for('views.' + permission.lower() + '_req_table'))

@@ -86,9 +86,19 @@
     <section class="notification-model">
         <div class="inner-model">
             <div class="model-nav">
-                <button class="model-close" onclick="window.location.href='/{{req_details.permission_type.lower()}}_req_table';">
+                {% if req_details.back_page == 'admin' %}
+                <button class="model-close" onclick="window.location.href='/';">
                     <i class="fas fa-times-circle"></i>
                 </button>
+                {% elif req_details.back_page == 'late_table' %}
+                <button class="model-close" onclick="window.location.href='/late_req_table';">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+                {% else %}
+                <button class="model-close" onclick="window.location.href='/leave_req_table';">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+                {% endif %}
             </div>
             <div class="model-body">
                 <div class="model-profile">

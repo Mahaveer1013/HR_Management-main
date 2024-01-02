@@ -47,19 +47,20 @@
                 <div class="notification-user-name">
                   {{single_notification.emp_name}}
                   <a
-                    href="{{ url_for('views.' + single_notification.permission.lower() + '_req_profile',
+                    href="{{ url_for('views.' + single_notification.permission_type.lower() + '_req_profile',
                     emp_id=single_notification.emp_id,
                     emp_name=single_notification.emp_name,
                     from_time=single_notification.from_time,
                     to_time=single_notification.to_time,
                     reason=single_notification.reason,
-                    req_id=single_notification.id)}}"
+                    req_id=single_notification.req_id, 
+                    back_page='admin',)}}"
                   >
                     <i class="fas fa-eye eye-icon"></i
                   ></a>
                 </div>
                 <div class="notification-message">
-                  {{single_notification.permission}}-{{single_notification.reason}}
+                  {{single_notification.permission_type}}-{{single_notification.reason}}
                 </div>
               </div>
             </li>
@@ -105,12 +106,12 @@
           </a>
         </form>
 
-        <form action="" class="menu-option" style="display: none">
+        <li class="menu-option upload-option" style="margin-top: 7px">
           <span class="icon">
-            <i class="fas fa-clock"></i>
+            <i class="fas fa-upload"></i>
           </span>
-          <p class="menu-name">Shift List</p>
-        </form>
+          <p class="menu-name">Upload</p>
+        </li>
       </ul>
     </aside>
 
@@ -151,7 +152,53 @@
 
       <link rel="stylesheet" href="static/css/attendance.css" />
       <!-- <iframe src="" frameborder="0" class="frame"></iframe> -->
-
+      <section class="upload-model" style="display: none">
+        <div class="inner-upload">
+          <a class="close-btn">
+            <i class="fas fa-times-circle"></i>
+          </a>
+          <form action="" class="upload-form">
+            <div class="input-field">
+              <label class="label active">
+                <input
+                  type="radio"
+                  name="filetype"
+                  value="attendance"
+                  id="filetype1"
+                  checked="true"
+                />
+                Attendance
+              </label>
+              <label class="label">
+                <input
+                  type="radio"
+                  name="filetype"
+                  value="addEmployee"
+                  id="filetype2"
+                />
+                add employee
+              </label>
+              <label class="label">
+                <input
+                  type="radio"
+                  name="filetype"
+                  value="shift"
+                  id="filetype2"
+                />
+                Shift excel
+              </label>
+            </div>
+            <div class="drag-drop-area" id="drop-area">
+              <input type="file" name="file" id="file" hidden />
+              <p>Drag and drop a file here or click to select a file</p>
+            </div>
+            <div id="file-actions" style="display: none">
+              <button type="button" id="cancel-btn">Cancel</button>
+              <button type="submit" id="upload-btn">Upload</button>
+            </div>
+          </form>
+        </div>
+      </section>
       <section class="frame today-attendance" style="display: flex">
         <div class="inner-frame">
           <div class="frame-header">
@@ -264,7 +311,8 @@
                     from_time=late_permission.from_time,
                     to_time=late_permission.to_time,
                     reason=late_permission.reason,
-                    req_id=late_permission.id)}}"> <i class="fas fa-eye eye-icon"></i></a>
+                    req_id=late_permission.id,
+                    backpage='admin')}}"> <i class="fas fa-eye eye-icon"></i></a>
                           </div>
                           <div class="notification-message">
                               Late - ${late_permission.reason}
@@ -273,6 +321,7 @@
                   </li>
                                 `;
         countNotification();
+        location.reload();
       });
 
       socket.on("leave", function (leave_permission) {
@@ -294,12 +343,14 @@
                       <div class="notification-details leave-notification">
                           <div class="notification-user-name">
                               ${leave_permission.emp_name}-<a href="{{ url_for('views.leave_req_profile',
+                              permission='leave',
                                              emp_id=leave_permission.emp_id,
                                              emp_name=leave_permission.emp_name,
                                              from_time=leave_permission.from_time,
                                              to_time=leave_permission.to_time,
                                              reason=leave_permission.reason,
-                                             req_id=leave_permission.id )}}"> <i class="fas fa-eye eye-icon"></i></a>
+                                             req_id=leave_permission.id,
+                                             backpage='admin',)}}"> <i class="fas fa-eye eye-icon"></i></a>
                           </div>
                           <div class="notification-message">
                               Leave - ${leave_permission.reason}
@@ -308,6 +359,101 @@
                   </li>
                                 `;
         countNotification();
+      });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        var dropArea = document.getElementById("drop-area");
+        var fileInput = document.getElementById("file");
+        var actions = document.getElementById("file-actions");
+        var cancelBtn = document.getElementById("cancel-btn");
+        var fileNameDisplay = document.createElement("p");
+        fileNameDisplay.id = "file-name-display";
+        dropArea.appendChild(fileNameDisplay); // Add the file name display to the drop area
+
+        // Function to update UI with file name
+        function updateFileNameDisplay(file) {
+          fileNameDisplay.innerHTML = file
+            ? `Selected file: <strong>${file.name}</strong>`
+            : "";
+        }
+
+        // Open file selector when clicked on the drop area
+        dropArea.addEventListener("click", function () {
+          fileInput.click();
+        });
+
+        fileInput.addEventListener("change", function () {
+          handleFileSelection(this.files);
+        });
+
+        dropArea.addEventListener("dragover", function (e) {
+          e.preventDefault();
+          dropArea.classList.add("drag-over");
+        });
+
+        dropArea.addEventListener("dragleave", function (e) {
+          e.preventDefault();
+          dropArea.classList.remove("drag-over");
+        });
+
+        dropArea.addEventListener("drop", function (e) {
+          e.preventDefault();
+          dropArea.classList.remove("drag-over");
+          handleFileSelection(e.dataTransfer.files);
+        });
+
+        cancelBtn.addEventListener("click", function () {
+          clearFileInput();
+        });
+
+        function handleFileSelection(files) {
+          if (files && files.length > 0) {
+            var allowedFileTypes = ["xlsx", "xls", "csv"];
+            var file = files[0];
+            var fileExtension = file.name.split(".").pop().toLowerCase();
+
+            if (allowedFileTypes.indexOf(fileExtension) === -1) {
+              alert("Invalid file type. Please select a valid file.");
+              clearFileInput();
+              return;
+            }
+
+            updateFileNameDisplay(file);
+            actions.style.display = "block";
+          }
+        }
+
+        function clearFileInput() {
+          fileInput.value = ""; // Clear the file input
+          updateFileNameDisplay(null);
+          actions.style.display = "none";
+        }
+      });
+
+      let all_radios = document.querySelectorAll('input[type="radio"]');
+
+      all_radios.forEach((radio) => {
+        radio.addEventListener("click", () => {
+          all_radios.forEach((rad) => {
+            rad.parentElement.classList.remove("active");
+          });
+          if (radio.checked == true) {
+            radio.parentElement.classList.add("active");
+          }
+        });
+      });
+
+      const upload_model = document.querySelector(".upload-model");
+      const uploadClose = document.querySelector(".close-btn");
+
+      uploadClose.addEventListener("click", () => {
+        upload_model.style.display = "none";
+      });
+
+      const upload_button = document.querySelector(".upload-option");
+
+      upload_button.addEventListener("click", () => {
+        upload_model.style.display = "flex";
       });
 
       document
@@ -335,6 +481,8 @@
             );
           }
         });
+
+
     </script>
   </body>
 </html>

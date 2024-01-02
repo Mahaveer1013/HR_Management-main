@@ -51,17 +51,19 @@
                     <div class="notification-details">
                         <div class="notification-user-name">
                             {{single_notification.emp_name}} <a
-                            href="{{ url_for('views.' + permission_type.lower() + '_req_profile',
+                            href="{{ url_for('views.' + single_notification.permission_type.lower() + '_req_profile',
                                              emp_id=single_notification.emp_id,
                                              emp_name=single_notification.emp_name,
                                              from_time=single_notification.from_time,
                                              to_time=single_notification.to_time,
                                              reason=single_notification.reason,
-                                             req_id=single_notification.id )}}">
+                                             req_id=single_notification.req_id,
+                                             back_page=permission_type.lower()+'_table')}}">
+                                             
                              <i class="fas fa-eye eye-icon"></i></a>
                         </div>
                         <div class="notification-message">
-                          {{single_notification.permission}}-{{single_notification.reason}}
+                          {{single_notification.permission_type}}-{{single_notification.reason}}
                         </div>
                     </div>
                 </li>
@@ -112,12 +114,12 @@
           </a>
         </form>
 
-        <form action="" class="menu-option" style="display: none">
+        <li class="menu-option upload-option" style="margin-top: 7px">
           <span class="icon">
-            <i class="fas fa-clock"></i>
+            <i class="fas fa-upload"></i>
           </span>
-          <p class="menu-name">Shift List</p>
-        </form>
+          <p class="menu-name">Upload</p>
+        </li>
       </ul>
     </aside>
 
@@ -133,6 +135,54 @@
       </header>
 
       <link rel="stylesheet" href="static/css/late.css" />
+
+      <section class="upload-model" style="display: none">
+        <div class="inner-upload">
+          <a class="close-btn">
+            <i class="fas fa-times-circle"></i>
+          </a>
+          <form action="" class="upload-form">
+            <div class="input-field">
+              <label class="label active">
+                <input
+                  type="radio"
+                  name="filetype"
+                  value="attendance"
+                  id="filetype1"
+                  checked="true"
+                />
+                Attendance
+              </label>
+              <label class="label">
+                <input
+                  type="radio"
+                  name="filetype"
+                  value="addEmployee"
+                  id="filetype2"
+                />
+                add employee
+              </label>
+              <label class="label">
+                <input
+                  type="radio"
+                  name="filetype"
+                  value="shift"
+                  id="filetype2"
+                />
+                Shift excel
+              </label>
+            </div>
+            <div class="drag-drop-area" id="drop-area">
+              <input type="file" name="file" id="file" hidden />
+              <p>Drag and drop a file here or click to select a file</p>
+            </div>
+            <div id="file-actions" style="display: none">
+              <button type="button" id="cancel-btn">Cancel</button>
+              <button type="submit" id="upload-btn">Upload</button>
+            </div>
+          </form>
+        </div>
+      </section>
 
       <section class="late-table-section">
         <header class="late-header">
@@ -186,28 +236,28 @@
                                      to_time=permission.to_time,
                                      reason=permission.reason,
                                      req_id=permission.id,
-                                     back_page=${permission_type.lower()}_table)}},"
+                                     back_page=permission_type.lower()+'_table',)}}"
                     ><i class="fas fa-eye"></i
                   ></a>
                 </td>
               </tr>
               {% endfor %}
               <script>
+                function generateUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by) {
+                    back_page='${permission_type.lower()}_table'
+                  return "{{ url_for('views.'+permission_type.lower()+'_req_profile') }}" +
+                    `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${back_page}`;
+                }
 
-
-                socket.on("late", function (permission) {
+                socket.on("${permission_type.lower()}", function (permission) {
                   console.log(
                     "Received permission:",
                     permission.emp_id
                   );
-                  function generateUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by) {
-                    backpage='late_table'
-                  return "{{ url_for('views.' + permission_type.lower() + '_req_profile') }}" +
-                    `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${backpage}`;
-                }
+                  
                   var currentDate = new Date().toLocaleDateString();
                   var currentTime = new Date().toLocaleTimeString();
-                  var tbody = document.getElementById("late-table");
+                  var tbody = document.getElementById("${permission_type.lower()}-table");
                   tbody.innerHTML += `
                                     <tr>
                                     <td>#${permission.emp_id}</td>
@@ -258,34 +308,29 @@
                                });
 
 
-                  socket.on("leave", function (permission) {
-                  var currentDate = new Date().toLocaleDateString();
-                  var currentTime = new Date().toLocaleTimeString();
-                  var tbody = document.getElementById("leave-table");
-                  function generateUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by) {
-                    backpage='leave_table'
-                  return "{{ url_for('views.' + permission_type.lower() + '_req_profile') }}" +
-                    `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${backpage}`;
-                }
-                  tbody.innerHTML += `
-                                    <tr>
-                                    <td>${permission.emp_id}</td>
-                                    <td>${permission.emp_name}</td>
-                                    <td>${currentDate}</td>
-                                    <td>${currentTime}</td>
-                                    <td>${permission.from_time}</td>
-                                    <td>${permission.to_time}</td>
-                                    <td>${permission.reason}</td>
-                                    <td>${permission.status}</td>
-                                    <td>${permission.approved_by}</td>
-                                    <td>
-                                      <a href="${generateUrl(permission.emp_id, permission.emp_name, permission.from_time, permission.to_time, permission.reason, permission.id,permission.status,permission.approved_by)}">
-                                        <i class="fas fa-eye"></i>
-                                      </a>
-                                    </td>
-                                    </tr>
-                                `;
-                                console.log("Received permission:", permission.emp_id);
+                  // socket.on("leave", function (permission) {
+                  // var currentDate = new Date().toLocaleDateString();
+                  // var currentTime = new Date().toLocaleTimeString();
+                  // var tbody = document.getElementById("leave-table");
+                  // tbody.innerHTML += `
+                  //                   <tr>
+                  //                   <td>${permission.emp_id}</td>
+                  //                   <td>${permission.emp_name}</td>
+                  //                   <td>${currentDate}</td>
+                  //                   <td>${currentTime}</td>
+                  //                   <td>${permission.from_time}</td>
+                  //                   <td>${permission.to_time}</td>
+                  //                   <td>${permission.reason}</td>
+                  //                   <td>${permission.status}</td>
+                  //                   <td>${permission.approved_by}</td>
+                  //                   <td>
+                  //                     <a href="${generateUrl(permission.emp_id, permission.emp_name, permission.from_time, permission.to_time, permission.reason, permission.id,permission.status,permission.approved_by)}">
+                  //                       <i class="fas fa-eye"></i>
+                  //                     </a>
+                  //                   </td>
+                  //                   </tr>
+                  //               `;
+                  //               console.log("Received permission:", permission.emp_id);
                                 // const notifications = document.querySelector(".notifications");
 
                                 // if (document.querySelector(".notification-box")) {
@@ -316,7 +361,7 @@
                                 // }
 
                                 // document.querySelector(".count").innerHTML = count - 1;
-                              });
+                              // });
               </script>
               <script>
                 const bell_btn = document.querySelector(".notification-btn");
@@ -351,6 +396,17 @@ bell_btn.addEventListener("click", () => {
     notifications.classList.toggle("active");
     console.log("Toggled active class");
 });
+function LategenerateSocketUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by, socket_permission) {
+    var back_page = permission_type.lower()+'_table';
+    return `{{ url_for('views.late_req_profile') }}` +
+        `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${back_page}`;
+}
+function LeavegenerateSocketUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by, socket_permission) {
+    var back_page = permission_type.lower()+'_table';
+    return `{{ url_for('views.leave_req_profile') }}` +
+        `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${back_page}`;
+}
+
 
       socket.on("late", function (late_permission) {
           console.log("Received late_permission:",late_permission.emp_id);
@@ -369,14 +425,7 @@ bell_btn.addEventListener("click", () => {
                       </div>
                       <div class="notification-details">
                           <div class="notification-user-name">
-                              ${late_permission.emp_name} <a href="{{ url_for('views.late_req_profile',
-                                             emp_id=late_permission.emp_id,
-                                             emp_name=late_permission.emp_name,
-                                             from_time=late_permission.from_time,
-                                             to_time=late_permission.to_time,
-                                             reason=late_permission.reason,
-                                             req_id=late_permission.id,
-                                             back_page=late_table )}}"> <i class="fas fa-eye eye-icon"></i></a>
+                              ${late_permission.emp_name} <a href="${LategenerateSocketUrl(late_permission.emp_id, late_permission.emp_name, late_permission.from_time, late_permission.to_time, late_permission.reason, late_permission.id,late_permission.status,late_permission.approved_by,'late')}"> <i class="fas fa-eye eye-icon"></i></a>
                           </div>
                           <div class="notification-message">
                               Late - ${late_permission.reason}
@@ -404,14 +453,7 @@ bell_btn.addEventListener("click", () => {
                       </div>
                       <div class="notification-details leave-notification">
                           <div class="notification-user-name">
-                              ${leave_permission.emp_name}-<a href="{{ url_for('views.leave_req_profile',
-                                             emp_id=leave_permission.emp_id,
-                                             emp_name=leave_permission.emp_name,
-                                             from_time=leave_permission.from_time,
-                                             to_time=leave_permission.to_time,
-                                             reason=leave_permission.reason,
-                                             req_id=leave_permission.id,
-                                             back_page=leave_table )}}"> <i class="fas fa-eye eye-icon"></i></a>
+                              ${leave_permission.emp_name}-<a href="${LeavegenerateSocketUrl(leave_permission.emp_id, leave_permission.emp_name, leave_permission.from_time, leave_permission.to_time, leave_permission.reason, leave_permission.id,leave_permission.status,leave_permission.approved_by,'leave')}"> <i class="fas fa-eye eye-icon"></i></a>
                           </div>
                           <div class="notification-message">
                               Leave - ${leave_permission.reason}
@@ -421,6 +463,101 @@ bell_btn.addEventListener("click", () => {
                                 `;
                 countNotification();
                 });
+
+                document.addEventListener("DOMContentLoaded", function () {
+        var dropArea = document.getElementById("drop-area");
+        var fileInput = document.getElementById("file");
+        var actions = document.getElementById("file-actions");
+        var cancelBtn = document.getElementById("cancel-btn");
+        var fileNameDisplay = document.createElement("p");
+        fileNameDisplay.id = "file-name-display";
+        dropArea.appendChild(fileNameDisplay); // Add the file name display to the drop area
+
+        // Function to update UI with file name
+        function updateFileNameDisplay(file) {
+          fileNameDisplay.innerHTML = file
+            ? `Selected file: <strong>${file.name}</strong>`
+            : "";
+        }
+
+        // Open file selector when clicked on the drop area
+        dropArea.addEventListener("click", function () {
+          fileInput.click();
+        });
+
+        fileInput.addEventListener("change", function () {
+          handleFileSelection(this.files);
+        });
+
+        dropArea.addEventListener("dragover", function (e) {
+          e.preventDefault();
+          dropArea.classList.add("drag-over");
+        });
+
+        dropArea.addEventListener("dragleave", function (e) {
+          e.preventDefault();
+          dropArea.classList.remove("drag-over");
+        });
+
+        dropArea.addEventListener("drop", function (e) {
+          e.preventDefault();
+          dropArea.classList.remove("drag-over");
+          handleFileSelection(e.dataTransfer.files);
+        });
+
+        cancelBtn.addEventListener("click", function () {
+          clearFileInput();
+        });
+
+        function handleFileSelection(files) {
+          if (files && files.length > 0) {
+            var allowedFileTypes = ["xlsx", "xls", "csv"];
+            var file = files[0];
+            var fileExtension = file.name.split(".").pop().toLowerCase();
+
+            if (allowedFileTypes.indexOf(fileExtension) === -1) {
+              alert("Invalid file type. Please select a valid file.");
+              clearFileInput();
+              return;
+            }
+
+            updateFileNameDisplay(file);
+            actions.style.display = "block";
+          }
+        }
+
+        function clearFileInput() {
+          fileInput.value = ""; // Clear the file input
+          updateFileNameDisplay(null);
+          actions.style.display = "none";
+        }
+      });
+
+      let all_radios = document.querySelectorAll('input[type="radio"]');
+
+      all_radios.forEach((radio) => {
+        radio.addEventListener("click", () => {
+          all_radios.forEach((rad) => {
+            rad.parentElement.classList.remove("active");
+          });
+          if (radio.checked == true) {
+            radio.parentElement.classList.add("active");
+          }
+        });
+      });
+
+      const upload_model = document.querySelector(".upload-model");
+      const uploadClose = document.querySelector(".close-btn");
+
+      uploadClose.addEventListener("click", () => {
+        upload_model.style.display = "none";
+      });
+
+      const upload_button = document.querySelector(".upload-option");
+
+      upload_button.addEventListener("click", () => {
+        upload_model.style.display = "flex";
+      });
 
               </script>
             </tbody>
