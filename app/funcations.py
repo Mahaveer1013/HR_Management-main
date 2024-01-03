@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 import smtplib
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from flask import current_app as app
 from flask import  flash,redirect
-from .models import Attendance, Shift_time, Employee
+from .models import Attendance, Shift_time, Emp_login
 from . import db
 from os import path
 import datetime
@@ -57,6 +58,28 @@ def send_sms(numbers_to_message, message_body):
 
         print(f"Message SID for {number}: {message.sid}")
     
+def update_or_add_shift(shift_type, in_time, out_time):
+    existing_shift = Shift_time.query.filter_by(shiftType=shift_type).first()
+
+    if existing_shift:
+        # Update existing shift
+        existing_shift.shiftIntime = in_time
+        existing_shift.shift_Outtime = out_time
+        existing_shift.work_Duration = "none"
+        db.session.commit()
+        print("Shift updated")
+    else:
+        # Add new shift
+        new_shift = Shift_time(
+            shiftIntime=in_time,
+            shift_Outtime=out_time,
+            shiftType=shift_type,
+            work_Duration="none"
+        )
+        db.session.add(new_shift)
+        db.session.commit()
+        print("New shift added")
+
 def process_excel_data(file_path):
     if os.path.exists(file_path):
         sheet_names = pd.ExcelFile(file_path).sheet_names
@@ -73,40 +96,19 @@ def process_excel_data(file_path):
 
             for index, row in df.iterrows():
                 shift_type = row['Shift']
+                in_time = str(row['S. InTime'])
+                out_time = str(row['S. OutTime'])
                 print("Processing: ", shift_type)
 
-                existing_shift = db.session.query(Shift_time).filter_by(shiftType=shift_type).first()
-                if not existing_shift:
-                    print("Adding new shift")
-                    shift = Shift_time(
-                        shiftIntime=str(row['S. InTime']),
-                        shift_Outtime=str(row['S. OutTime']),
-                        shiftType=str(row['Shift']),
-                        work_Duration=str(row['Work Duration'])
-                    )
-                    db.session.add(shift)
-
-                    attendance = Attendance(
-                        
-                        shiftIntime=str(row['S. InTime']),
-                        shift_Outtime=str(row['S. OutTime']),
-                        shiftType=str(row['Shift']),
-                        work_Duration=str(row['Work Duration'])
-                    )
-                    db.session.add(attendance)
-
-        db.session.commit()
-        
-    else:
-        print("File not found")
+                update_or_add_shift(shift_type, in_time, out_time)
 
 
 def calculate_Attendance(chunk_size=100):
-    total_employees = Employee.query.count()
+    total_employees = Emp_login.query.count()
     total_chunks = (total_employees + chunk_size - 1) // chunk_size
 
     for chunk_index in range(total_chunks):
-        employees = Employee.query.offset(chunk_index * chunk_size).limit(chunk_size).all()
+        employees = Emp_login.query.offset(chunk_index * chunk_size).limit(chunk_size).all()
         for employee in employees:
             attendance_records = Attendance.query.filter_by(emp_id=employee.id).all()
 
@@ -153,15 +155,25 @@ def calculate_Attendance(chunk_size=100):
             db.session.commit()
 
 def calculate_time_difference(time1_str, time2_str):
+    print("DEBUG - time1_str:", time1_str)
+    print("DEBUG - time2_str:", time2_str)
+
     # Convert time strings to datetime objects (without seconds)
     time_format = '%H:%M'
-    time1 = datetime.strptime(time1_str, time_format)
-    time2 = datetime.strptime(time2_str, time_format)
     
+    try:
+        if time1_str == "00:00" or time2_str == "00:00":
+            return "00:00"
+            
+        time1 = datetime.strptime(time1_str, time_format)
+        time2 = datetime.strptime(time2_str, time_format)
+    except ValueError as e:
+        print("ValueError:", e)
+        return "00:00"
+
     # Calculate time difference in seconds
     time_difference_seconds = (time2 - time1).total_seconds()
-    print("TEST:",time_difference_seconds)
-    
+
     # Convert seconds to hours and minutes
     total_minutes = time_difference_seconds // 60
 
@@ -179,7 +191,7 @@ def update_wages_for_present_employees():
     current_date = datetime.datetime.now().date()
 
   
-    employees = Employee.query.filter_by(workType='employee').all()
+    employees = Emp_login.query.filter_by(role='employee').all()
 
     for employee in employees:
         
@@ -198,7 +210,7 @@ def update_wages_for_present_daily_workers():
     current_date = datetime.datetime.now().date()
 
   
-    employees = Employee.query.filter_by(workType='daily').all()
+    employees = Emp_login.query.filter_by(role='daily').all()
 
     for employee in employees:
         
@@ -235,7 +247,7 @@ def schedule_function(emp_id):
 
 
 def count_attendance_and_update_shift():
-    employees = Employee.query.all()  # Fetch all employees
+    employees = Emp_login.query.all()  # Fetch all employees
     
     for employee in employees:
         attendance_count = len(employee.attendances)
@@ -259,10 +271,10 @@ def count_attendance_and_update_shift():
 
 # def run_for_all_employees():
     # Assuming Employee is your SQLAlchemy model for employees
-    employees = Employee.query.filter_by(workType='employee').all()
+    # employees = Employee.query.filter_by(workType='employee').all()
 
-    for employee in employees:
-        count_attendance_and_update_shift_periodic(employee.id)
+    # for employee in employees:
+    #     count_attendance_and_update_shift_periodic(employee.id)
 
 
 
@@ -346,62 +358,6 @@ def process_csv_file(file_path):
 
 
 
-def addemployee(file_path):
-    if os.path.exists(file_path):
-        _, file_extension = os.path.splitext(file_path)
-        
-        if file_extension.lower() == '.xlsx' or file_extension.lower() == '.xls':
-            sheet_names = pd.ExcelFile(file_path).sheet_names
-        elif file_extension.lower() == '.csv':
-            sheet_names = [None]  # For CSV, we don't need sheet names
-        else:
-            return print("Unsupported file format")
-
-        data_to_insert = []
-
-        for sheet_name in sheet_names:
-            if file_extension.lower() == '.xlsx' or file_extension.lower() == '.xls':
-                if sheet_name:
-                    df = pd.read_excel(file_path, sheet_name, engine='openpyxl')
-                else:
-                    df = pd.read_excel(file_path, engine='openpyxl')
-            elif file_extension.lower() == '.csv':
-                df = pd.read_csv(file_path)
-            else:
-                return print("Unsupported file format")
-
-            for index, row in df.iterrows():
-                empid = row['emp_id']
-                print("Processing: ", empid)
-                dob = pd.to_datetime(row['dob']) if pd.notna(row['dob']) else None
-
-                existing_emp = db.session.query(Employee).filter_by(email=empid).first()
-                if not existing_emp:
-                    data_to_insert.append({
-                        'id': empid,
-                        'name': row['name'],
-                        'dob': dob,
-                        'designation': row['designation'],
-                        'workType': row['workType'],
-                        'email': row['email'],
-                        'phoneNumber': row['phoneNumber'],
-                        'adharNumber': row['adharNumber'],
-                        'gender': row['gender'],
-                        'address': row['address'],
-                        'shift': row['shift']
-                    })
-                else:
-                    print(f"Employee with ID {empid} already exists.")
-
-        if data_to_insert:
-            db.session.bulk_insert_mappings(Employee, data_to_insert)
-            db.session.commit()
-            print("Data added successfully.")
-        else:
-            print("No new data to add.")
-    else:
-        print("File not found")
-
 
 def attend_excel_data(file_path):
     if os.path.exists(file_path):
@@ -421,7 +377,8 @@ def attend_excel_data(file_path):
                 empid = row['emp_id']
                 print("Processing: ", empid)
                 # date =datetime.date.today()
-                emp = db.session.query(Employee).filter_by(id=empid).first()
+                emp = db.session.query(Emp_login).filter_by(id=empid).first()
+                print("Shift: ",emp.shift)
                 
                 attendance_status = 'Absent' if str(row['intime']) == "00:00" and str(row['outtime']) == "00:00" else 'Present'
                 shift_type = None
@@ -431,6 +388,7 @@ def attend_excel_data(file_path):
                 shitfTime=  Shift_time.query.filter_by(shiftType=emp.shift).first()
                 attendance = Attendance(
                     emp_id=empid,
+                    name=emp.name,
                     inTime=str(row['intime']),
                     outTime=str(row['outtime']),
                     shiftType=shift_type,
@@ -454,3 +412,79 @@ def delete_all_employees():
         print("An error occurred:", str(e))
         
 
+def read_excel_data(file_path, sheet_name=None):
+    if sheet_name:
+        return pd.read_excel(file_path, sheet_name, engine='openpyxl')
+    else:
+        return pd.read_excel(file_path, engine='openpyxl')
+
+def read_csv_data(file_path):
+    return pd.read_csv(file_path)
+
+def add_employee(file_path):
+    try:
+        if os.path.exists(file_path):
+            _, file_extension = os.path.splitext(file_path)
+
+            if file_extension.lower() == '.xlsx' or file_extension.lower() == '.xls':
+                sheet_names = pd.ExcelFile(file_path).sheet_names
+            elif file_extension.lower() == '.csv':
+                sheet_names = [None]  # For CSV, we don't need sheet names
+            else:
+                raise ValueError("Unsupported file format")
+
+            data_to_insert = []
+
+            for sheet_name in sheet_names:
+                if file_extension.lower() == '.xlsx' or file_extension.lower() == '.xls':
+                    df = read_excel_data(file_path, sheet_name)
+                elif file_extension.lower() == '.csv':
+                    df = read_csv_data(file_path)
+                else:
+                    raise ValueError("Unsupported file format")
+
+                for index, row in df.iterrows():
+                    emp_id = row['emp_id']
+                    print("Processing: ", emp_id)
+                    dob = pd.to_datetime(row['dob']) if pd.notna(row['dob']) else None
+
+                    existing_emp = db.session.query(Emp_login).filter_by(id=emp_id).first()
+                    if not existing_emp:
+                        data_to_insert.append({
+                            'emp_id': emp_id,
+                            'name': row['name'],
+                            'role': row['designation'],
+                            'email': row['email'],
+                            'phoneNumber': row['phoneNumber'],
+                            'shift': row['shift'],
+                            'gender':row['gender'],
+                            'password':generate_password_hash("lol")
+                        })
+                    else:
+                        print(f"Employee with ID {emp_id} already exists. Updating instead of inserting.")
+                        
+                        # Update existing record if needed
+                        existing_emp.name = row['name']
+                        existing_emp.role = row['designation']
+                        existing_emp.email = row['email']
+                        existing_emp.phoneNumber = row['phoneNumber']
+                        existing_emp.shift = row['shift']
+                        existing_emp.gender=row['gender']
+                        existing_emp.password=generate_password_hash("lol")
+
+
+            if data_to_insert:
+                with db.session.begin_nested():
+                    db.session.bulk_insert_mappings(Emp_login, data_to_insert)
+                    db.session.commit()
+                print("Data added successfully.")
+                
+            else:
+                print("No new data to add.")
+            
+            db.session.commit()  # Commit the main transaction
+        else:
+            print("File not found")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        db.session.rollback()  # Rollback changes in case of an exception

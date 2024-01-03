@@ -1,7 +1,7 @@
 from flask_login import login_required, login_user, logout_user, current_user
 from flask import Blueprint, render_template, request, flash, redirect, url_for,session
 from werkzeug.security import generate_password_hash, check_password_hash
-from .models import Employee,Attendance,Shift_time,Backup, late, leave,notifications,NewShift,Emp_login
+from .models import Attendance,Shift_time,Backup, late, leave,notifications,NewShift,Emp_login
 from . import db
 import datetime
 from flask import current_app as app
@@ -19,10 +19,13 @@ def login():
     admin = Emp_login.query.filter_by(id=1).first()
     if admin:
         if request.method == 'POST':
+            
             email = request.form.get('email')
             password = request.form.get('password')
+            # session.clear()
 
             dbemail = Emp_login.query.filter_by(email=email).first()
+            print(dbemail)
             if dbemail :
                 if check_password_hash(dbemail.password, password):
 
@@ -82,7 +85,7 @@ def login():
 
 @auth.route('/login', methods=['POST', 'GET'])
 def admin_login():
-    session.clear()
+    
     print("session cleared")
     return render_template("login.html")
 

@@ -1,3 +1,4 @@
+console.log("script.js");
 function updateClock() {
   let date = new Date();
 
@@ -51,31 +52,30 @@ toggle.addEventListener("click", () => {
 
 
 document.addEventListener("DOMContentLoaded", function () {
+  console.log("downlaods");
   let all_downloads = document.querySelectorAll(".download");
 
-  all_downloads.forEach((download) => {
-    download.addEventListener("click", () => {
-      let parent = download.parentElement.parentElement.parentElement;
-      let table = parent.querySelector("table");
+  all_downloads.forEach(download => {
+      download.addEventListener("click", () => {
+          let parent = download.parentElement.parentElement.parentElement;
+          let table = parent.querySelector('table');
 
-      // Convert the table to a worksheet
-      let ws = XLSX.utils.table_to_sheet(table);
+          // Convert the table to a worksheet
+          let ws = XLSX.utils.table_to_sheet(table);
 
-      // Create a workbook with a single worksheet
-      let wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+          // Create a workbook with a single worksheet
+          let wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
 
-      // Convert the workbook to an array buffer
-      var wbArrayBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+          // Convert the workbook to an array buffer
+          var wbArrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
 
-      // Create a Blob from the array buffer
-      var blob = new Blob([wbArrayBuffer], {
-        type: "application/octet-stream",
+          // Create a Blob from the array buffer
+          var blob = new Blob([wbArrayBuffer], { type: 'application/octet-stream' });
+
+          // Trigger download using FileSaver.js
+          let fileName = parent.querySelector(".frame-details").textContent.trim();
+          saveAs(blob, `${fileName}.xlsx`);
       });
-
-      // Trigger download using FileSaver.js
-      let fileName = parent.querySelector(".frame-details").textContent;
-      saveAs(blob, `${fileName}.xlsx`);
-    });
   });
 });

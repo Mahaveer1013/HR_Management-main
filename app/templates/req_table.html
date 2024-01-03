@@ -397,12 +397,12 @@ bell_btn.addEventListener("click", () => {
     console.log("Toggled active class");
 });
 function LategenerateSocketUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by, socket_permission) {
-    var back_page = permission_type.lower()+'_table';
+    var back_page = '${socket_permission}_table';
     return `{{ url_for('views.late_req_profile') }}` +
         `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${back_page}`;
 }
 function LeavegenerateSocketUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by, socket_permission) {
-    var back_page = permission_type.lower()+'_table';
+    var back_page = '${socket_permission}_table';
     return `{{ url_for('views.leave_req_profile') }}` +
         `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${back_page}`;
 }
@@ -425,7 +425,7 @@ function LeavegenerateSocketUrl(empId, empName, fromTime, toTime, reason, reqId,
                       </div>
                       <div class="notification-details">
                           <div class="notification-user-name">
-                              ${late_permission.emp_name} <a href="${LategenerateSocketUrl(late_permission.emp_id, late_permission.emp_name, late_permission.from_time, late_permission.to_time, late_permission.reason, late_permission.id,late_permission.status,late_permission.approved_by,'late')}"> <i class="fas fa-eye eye-icon"></i></a>
+                              ${late_permission.emp_name} <a href="${LategenerateSocketUrl(late_permission.emp_id, late_permission.emp_name, late_permission.from_time, late_permission.to_time, late_permission.reason, late_permission.id,late_permission.status,late_permission.approved_by,'{{permission_type}}')}"> <i class="fas fa-eye eye-icon"></i></a>
                           </div>
                           <div class="notification-message">
                               Late - ${late_permission.reason}
@@ -434,6 +434,7 @@ function LeavegenerateSocketUrl(empId, empName, fromTime, toTime, reason, reqId,
                   </li>
                                     `;
                 countNotification();
+                window.location.href = "";
                 });
 
           socket.on("leave", function (leave_permission) {
@@ -453,7 +454,7 @@ function LeavegenerateSocketUrl(empId, empName, fromTime, toTime, reason, reqId,
                       </div>
                       <div class="notification-details leave-notification">
                           <div class="notification-user-name">
-                              ${leave_permission.emp_name}-<a href="${LeavegenerateSocketUrl(leave_permission.emp_id, leave_permission.emp_name, leave_permission.from_time, leave_permission.to_time, leave_permission.reason, leave_permission.id,leave_permission.status,leave_permission.approved_by,'leave')}"> <i class="fas fa-eye eye-icon"></i></a>
+                              ${leave_permission.emp_name}-<a href="${LeavegenerateSocketUrl(leave_permission.emp_id, leave_permission.emp_name, leave_permission.from_time, leave_permission.to_time, leave_permission.reason, leave_permission.id,leave_permission.status,leave_permission.approved_by,'{{permission_type}}')}"> <i class="fas fa-eye eye-icon"></i></a>
                           </div>
                           <div class="notification-message">
                               Leave - ${leave_permission.reason}
@@ -462,6 +463,7 @@ function LeavegenerateSocketUrl(empId, empName, fromTime, toTime, reason, reqId,
                   </li>
                                 `;
                 countNotification();
+                window.location.href = "";
                 });
 
                 document.addEventListener("DOMContentLoaded", function () {

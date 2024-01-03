@@ -1,6 +1,6 @@
 from flask_login import login_required, current_user,login_user
 from . import db
-from .models import Employee,Attendance,Shift_time,Backup, late, leave,notifications ,NewShift,Emp_login
+from .models import Attendance,Shift_time,Backup, late, leave,notifications ,NewShift,Emp_login
 from flask import Blueprint, render_template, request, flash, redirect, url_for,jsonify,session
 import json
 import datetime
@@ -25,28 +25,34 @@ from flask_socketio import emit
 from app import socketio
 @views.route('/',methods=['POST','GET'])
 @login_required
-def admin():     # not used ,,,, used in auth itself
-    try:
-        inshift = Shift_time.query.filter_by(id=1).first()
-        if not inshift:
-            file_path = os.path.join(app.config['EXCEL_FOLDER'], '01-08-23.xls')  # Use correct case 'EXCEL_FOLDER'
-            process_excel_data(file_path)  # Call the data processing function
-        else:
-            print("Shift not found")
+def admin():    
+    print(current_user.role) 
+    if current_user.role == 'employee':
+        return redirect(url_for('auth.logout'))
+    else :
 
-    except Exception as e:
-        print("Error occurred:", e)
-        db.session.rollback()  # Rollback in case of error
+    # not used ,,,, used in auth itself
+    # try:
+    #     inshift = Shift_time.query.filter_by(id=1).first()
+    #     if not inshift:
+    #         file_path = os.path.join(app.config['EXCEL_FOLDER'], '01-08-23.xls')  # Use correct case 'EXCEL_FOLDER'
+    #         process_excel_data(file_path)  # Call the data processing function
+    #     else:
+    #         print("Shift not found")
+
+    # except Exception as e:
+    #     print("Error occurred:", e)
+    #     db.session.rollback()  # Rollback in case of error
 
     
     # employee =Employee.query.order_by(Employee.id)
-    employee =Attendance.query.order_by(Attendance.id)   
-    late_permission=late.query.order_by(late.date).all()
-    leave_permission=leave.query.order_by(leave.date).all()
-    notification=notifications.query.order_by(notifications.timestamp).all()
-    print("notification : ",notification)
-    # sihft=Shift_time.query.order_by(Shift_time.id) 
-    return render_template('admin.html', notification=notification, employee=employee, late_permission=late_permission, leave_permission=leave_permission)
+        employee =Attendance.query.order_by(Attendance.date)   
+        late_permission=late.query.order_by(late.date).all()
+        leave_permission=leave.query.order_by(leave.date).all()
+        notification=notifications.query.order_by(notifications.timestamp).all()
+        print("notification : ",notification)
+        # sihft=Shift_time.query.order_by(Shift_time.id) 
+    return render_template('admin.html', notification=notification, attendance=employee, late_permission=late_permission, leave_permission=leave_permission)
 
 @views.route('/edit', methods=['POST', 'GET'])
 @login_required
@@ -64,7 +70,7 @@ def empEdit():
         dob_date = datetime.strptime(dob, '%Y-%m-%d').date()
 
         # Query the database for an employee with the given 'empid'
-        emp = Employee.query.filter_by(id=empid).first()
+        emp = Emp_login.query.filter_by(id=empid).first()
 
         if emp:
             # Update the employee's data with the new information
@@ -100,7 +106,7 @@ def delete_employee():
         
 
         # Check if an employee with the given emp_id exists in the database
-        employee = Employee.query.filter_by(id=int(emp_id)).first()
+        employee = Emp_login.query.filter_by(id=int(emp_id)).first()
         
         attendance=Attendance.query.filter_by(id=int(emp_id)).all()
         for record in attendance:
@@ -128,14 +134,13 @@ def delete_employee():
 def profileView():
     try: 
         
-        employee =Employee.query.order_by(Employee.id)
+        employee =Emp_login.query.order_by(Emp_login.id)
         
         
     except Exception as error:
         flash(error)
     current_date = datetime.now().date()
     return render_template('profile.html',employee=employee,current_date=current_date)
-
 
 @views.route('/calculate',methods=['POST','GET'])
 def calculate():
@@ -148,8 +153,7 @@ def calculate():
     # print(lol.shift_Outtime)
     attendance=Attendance.query.all()
     
-    return render_template("admin.html",attendance=attendance)
-            
+    return redirect('/')  
 # @views.route('/getshift',methods=['POST','GET'])
 # def get_shift():
 #     try:
@@ -372,7 +376,7 @@ def handle_lateform_callback(lateDet):
             print("Mail Not Sent")
 
     try:
-        user=Employee.query.filter_by(emp_id=emp_id).first()
+        user=Emp_login.query.filter_by(emp_id=emp_id).first()
         phone=user.phoneNumber
         body=" You Have Taken Late permission \n And You Have {} Late balance \n Have a Great Day".format(late_balance)
         send_sms(phone,body)
@@ -400,11 +404,11 @@ def handle_lateform_callback(lateDet):
         print(f"An error occurred: {str(e)}")
 
 
-@views.route('/request_disp')
-def request_disp():
-    late_permission=late.query.order_by(late.date).all()
-    leave_permission=leave.query.order_by(leave.date).all()
-    return render_template('request_disp.html',late_permission=late_permission,leave_permission=leave_permission)
+# @views.route('/request_disp')
+# def request_disp():
+#     late_permission=late.query.order_by(late.date).all()
+#     leave_permission=leave.query.order_by(leave.date).all()
+#     return render_template('request_disp.html',late_permission=late_permission,leave_permission=leave_permission)
 
 @socketio.on('leave')
 def handle_leaveform_callback(leaveDet):
@@ -466,9 +470,9 @@ def handle_leaveform_callback(leaveDet):
 
 
 
-@views.route("/emp_login_page")
-def emp_login_page():
-    return render_template("emp_log.html")
+# @views.route("/emp_login_page")
+# def emp_login_page():
+#     return render_template("emp_log.html")
 
 @views.route("/emp_login",methods=['POST','GET'])
 def emp_login():
@@ -499,20 +503,22 @@ def emp_login():
 def user_dashboard():
     if current_user.role=="admin":
         return redirect(url_for('auth.logout'))
-    emp_id = session.get('emp_id')
-    email = session.get('email')
-    name = session.get('name')
-    user = Emp_login.query.filter_by(emp_id=emp_id).first()
-    leave_balance = user.leave_balance
-    late_balance = user.late_balance
+    else:
+        emp_id = session.get('emp_id')
+        email = session.get('email')
+        name = session.get('name')
+        user = Emp_login.query.filter_by(emp_id=emp_id).first()
+        leave_balance = user.leave_balance
+        late_balance = user.late_balance
     return render_template("emp_req_choice.html",emp_id=emp_id,email=email,name=name,late_balance=late_balance,leave_balance=leave_balance)
 
-@views.route("/attendance_upload_page",methods=['POST','GET'])
-@login_required
-def attendance_upload_page():
-    return render_template('upload_attendance.html')
+# @views.route("/attendance_upload_page",methods=['POST','GET'])
+# @login_required
+# def attendance_upload_page():
+#     return render_template('upload_attendance.html')
 
 @views.route("/attendance_upload",methods=['POST','GET'])
+@login_required
 def upload_attendance():
     if(request.method=='POST'):
         file=request.files['attendance']
@@ -520,11 +526,11 @@ def upload_attendance():
         print(filename)
         file_path=os.path.join(app.config['EXCEL_FOLDER'], filename)
         file.save(file_path)
-        process_excel_data(file_path)
+        attend_excel_data(file_path)
         return redirect(url_for('views.calculate'))
 
-    else:
-        return redirect(url_for('views.attendance_upload_page'))
+    
+    return render_template('upload_attendance.html')
 
 @views.route("/attendance_table")
 @login_required
@@ -917,3 +923,59 @@ def leave_decline():
 
 #     # Redirect to a different page after handling the notification
 #     return redirect(url_for('views.' + permission.lower() + '_req_table'))
+
+@views.route("/addemp",methods=['POST','GET'])
+@login_required
+def upload_emp():
+    if(request.method=='POST'):
+        file=request.files['emp']
+        filename = secure_filename(file.filename)
+        print(filename)
+        file_path=os.path.join(app.config['EXCEL_FOLDER'], filename)
+        file.save(file_path)
+        add_employee(file_path)
+        return redirect(url_for('views.admin'))
+    return render_template("addrmp.html")
+
+@views.route('/uploadselect', methods=['POST'])
+def upload_select():
+    if(request.method=='POST'):
+
+        file_type = request.form.get('filetype')
+
+        # Handle file upload
+        if 'emp' in request.files:
+            file = request.files['emp']
+            # Customize response based on file_type
+            if file_type == 'attendance':
+                
+                filename = secure_filename(file.filename)
+                print(filename)
+                file_path=os.path.join(app.config['EXCEL_FOLDER'], filename)
+                file.save(file_path)
+                attend_excel_data(file_path)
+                return redirect(url_for('views.calculate'))
+            
+            elif file_type == 'addEmployee':
+                filename = secure_filename(file.filename)
+                print(filename)
+                file_path=os.path.join(app.config['EXCEL_FOLDER'], filename)
+                file.save(file_path)
+                add_employee(file_path)
+                return redirect(url_for('views.admin'))
+            elif file_type == 'shift':
+                filename = secure_filename(file.filename)
+                print(filename)
+                try:
+                  
+                        file_path = os.path.join(app.config['EXCEL_FOLDER'], str(filename))  # Use correct case 'EXCEL_FOLDER'
+                        process_excel_data(file_path)  # Call the data processing function
+
+
+                except Exception as e:
+                    print("Error occurred:", e)
+                    db.session.rollback()  
+        else :
+            return 'No file uploaded'
+
+    return redirect(url_for('views.admin'))
