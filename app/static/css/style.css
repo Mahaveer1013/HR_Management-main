@@ -633,7 +633,7 @@ li{
 }
 
 .inner-upload, .inner-delete-model{
-  min-width: 300px;
+  min-width: 500px;
   max-width: calc(100% - 10px);
   margin-top: 50px;
   padding: 10px;
@@ -727,6 +727,7 @@ input[type="radio"]{
   display: flex;
   align-items: center;
   gap: 10px;
+  justify-content: center;
 }
 
 .delete-table input[type="checkbox"]{
@@ -854,4 +855,9 @@ option{
 
 .edit-model .inner-delete-model{
   overflow-x: scroll;
+}
+.info-body{
+  max-height:460px ;
+  overflow-y: scroll;
+  position: relative;
 }

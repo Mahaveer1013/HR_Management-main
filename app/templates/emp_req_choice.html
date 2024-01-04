@@ -35,9 +35,6 @@
                     <div class="userName">
                         <i class="fas fa-user"></i> {{name}}
                     </div>
-                    <div class="edit-profile-div" index="0">
-                        <p class="edit-profile"></p>
-                    </div>
                 </div>
                 <div class="userdet">
                     <div class="userName">
@@ -52,7 +49,7 @@
                     </div>
                 </div>
             </div>
-            <section class="profileSection mainSection active" style="display: none;">
+            <section class="profileSection mainSection active">
                 <div class="divSection">
                     <div class="userProfilePic">
                         <img src="https://th.bing.com/th/id/OIP.Yw4exB-_crv1xcdLRQ6hngHaHx?pid=ImgDet&rs=1" alt="user_prof pic" class="userProfilePicImg" style=" height: 100%;">
@@ -102,41 +99,7 @@
                     </ul>
                 </div>
             </section>
-
-            <section class="profileEditSection mainSection" index="0">
-                <div class="divSection">
-                    <div class="userProfilePic">
-                        <img src="https://th.bing.com/th/id/OIP.Yw4exB-_crv1xcdLRQ6hngHaHx?pid=ImgDet&rs=1" alt="user_prof pic" class="userProfilePicImg" style=" height: 100%;">
-                    </div>
-                    <div class="prof_username">
-                        <i class="fas fa-user"></i> Emp Name
-                    </div>
-                </div>
-                <div class="divSection blur">
-                    <form method="post" action="/user_update_profile">
-                    <ul class="detailsList">
-    
-                        <li class="detList">
-                            <p class="innerP">Emp Name </p>
-                            <input type="text" class="emp_name" value={{name}}>
-                        </li>
-    
-                        <li class="detList">
-                            <p class="innerP">Emp Mail </p>
-                            <input type="text" class="emp_email" value={{email}}>
-                        </li>
-    
-                        <li class="detList">
-                            <p class="innerP">Emp Phone </p>
-                            <input type="text" class="emp_ph_number" value={{ph_number}}>
-                        </li>
-                        <button class="submit_use_edit">
-                    </form>
-                   </ul>
-                </div>
-            </section>
-    
-            
+           
 
             <section class="formSection mainSection leave_section " >
                 <div class="fromContainer">
