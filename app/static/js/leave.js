@@ -109,3 +109,22 @@ function changeUserDet() {
         alert('Empty request');
     }
 }
+
+const edit_profile_btn=document.querySelector('.edit_profile')
+const main_section = document.querySelectorAll(".mainSection");
+
+    edit_profile_btn.addEventListener("click", () => {
+        let index = edit_profile_btn.getAttribute("index");
+        all_frame.forEach(page => {
+            let pageIndex = page.getAttribute("index");
+            if (index == pageIndex) {
+                page.style.display = "block";
+            } else {
+                page.style.display = "none";
+            }
+        });
+        tag_btns.forEach(buttons => {
+            buttons.classList.remove("active");
+        });
+        btn.classList.add("active");
+    })

@@ -79,3 +79,30 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   });
 });
+
+const upload_model = document.querySelector(".upload-model");
+const uploadClose = document.querySelectorAll(".close-btn");
+
+uploadClose.forEach(element => {
+    element.addEventListener("click",()=>{
+        element.parentElement.parentElement.style.display = "none";
+    });
+});
+
+const upload_button = document.querySelector(".upload-option");
+
+upload_button.addEventListener("click", ()=>{
+    upload_model.style.display = "flex";
+});
+
+const delete_option = document.querySelector(".delete-option");
+
+delete_option.addEventListener("click",()=>{
+    document.querySelector(".delete-model").style.display = "flex";
+});
+
+const edit_option = document.querySelector(".edit-option");
+
+edit_option.addEventListener("click",()=>{
+    document.querySelector(".edit-model").style.display = "flex";
+});

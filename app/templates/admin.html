@@ -114,6 +114,20 @@
           </span>
           <p class="menu-name">Upload</p>
         </li>
+
+        <li class="menu-option delete-option">
+          <span class="icon">
+            <i class="fas fa-user-times"></i>
+          </span>
+          <p class="menu-name">Delete Employee</p>
+        </li>
+
+        <li class="menu-option edit-option">
+          <span class="icon">
+            <i class="fas fa-user-edit"></i>
+          </span>
+          <p class="menu-name">Edit Employee</p>
+        </li>
       </ul>
     </aside>
 
@@ -128,59 +142,8 @@
         </div>
       </header>
 
-      
-
       <link rel="stylesheet" href="static/css/attendance.css" />
-      <!-- <iframe src="" frameborder="0" class="frame"></iframe> -->
-      <section class="upload-model" style="display: none">
-        <div class="inner-upload">
-          <a class="close-btn">
-            <i class="fas fa-times-circle"></i>
-          </a>
-          <form method="POST" action="/uploadselect" enctype="multipart/form-data">
-            <div class="input-field">
-              <label class="label active">
-                <input
-                  type="radio"
-                  name="filetype"
-                  value="attendance"
-                  id="filetype1"
-                  checked="true"
-                />
-                Attendance
-              </label>
-              <label class="label">
-                <input
-                  type="radio"
-                  name="filetype"
-                  value="addEmployee"
-                  id="filetype2"
-                />
-                add employee
-              </label>
-              <label class="label">
-                <input
-                  type="radio"
-                  name="filetype"
-                  value="shift"
-                  id="filetype2"
-                />
-                Shift excel
-              </label>
-            </div>
-            <div class="drag-drop-area" id="drop-area">
-              
-              <!-- <input type="file" name="file" id="file" hidden /> -->
-            <input type="file" class="form-control-file" id="file" name="emp" accept=".xlsx,.xls" hidden required>
-              <p>Drag and drop a file here or click to select a file</p>
-            </div>
-            <div id="file-actions" style="display: none">
-              <button type="button" id="cancel-btn">Cancel</button>
-              <button type="submit" id="upload-btn">Upload</button>
-            </div>
-          </form>
-        </div>
-      </section>
+
       <menu class="table-menu" style="display: flex">
         <ul class="btn-container">
           <a href="/today_attendance" class="tag-btn click active"
@@ -197,6 +160,7 @@
           </select>
         </ul>
       </menu>
+
       <section class="frame today-attendance" style="display: flex">
         <div class="inner-frame">
           <div class="frame-header">
@@ -205,7 +169,7 @@
               <p class="frame-name">Attendance</p>
             </div>
             <div class="frame-options">
-              <button type="button" class="download ">
+              <button type="button" class="download">
                 <i class="fas fa-file-excel"></i>
               </button>
             </div>
@@ -227,28 +191,324 @@
                   <th>Extra Time</th>
                   <th>Status</th>
                 </tr>
-                
               </thead>
-              <tbody class="tableBody">{% if attendance %} {% for attendance in attendance %}
-                <tr data-shift="{{attendance.shiftType}}"><td class="id">{{attendance.emp_id }}</td>
-                <td class="name">{{attendance.name}}</td>
-                <td>{{attendance.date.date()}}</td>
-                <td>{{attendance.shiftIntime}}</td>
-                <td>{{attendance.shift_Outtime}}</td>
-                <td>{{attendance.inTime}}</td>
-                <td>{{attendance.outTime}}</td>
-                <td>{{attendance.lateBy}}</td>
-                <td>{{attendance.earlyGoingBy}}</td>
-                <td>{{attendance.TotalDuration}}</td>
-                <td class="extra">{{attendance.overtime}}</td>
-                <td>{% if attendance.attendance == "Present"%}<i class="fas fa-check-circle"></i> {% else %}<i class="fas fa-times-circle"></i> {% endif %}</td></tr>
-                {% endfor %} {% endif %}</tbody>
+              <tbody class="tableBody">
+                {% if attendance %} {% for attendance in attendance %}
+                <tr data-shift="{{attendance.shiftType}}">
+                  <td class="id">{{attendance.emp_id }}</td>
+                  <td class="name">{{attendance.name}}</td>
+                  <td>{{attendance.date.date()}}</td>
+                  <td>{{attendance.shiftIntime}}</td>
+                  <td>{{attendance.shift_Outtime}}</td>
+                  <td>{{attendance.inTime}}</td>
+                  <td>{{attendance.outTime}}</td>
+                  <td>{{attendance.lateBy}}</td>
+                  <td>{{attendance.earlyGoingBy}}</td>
+                  <td>{{attendance.TotalDuration}}</td>
+                  <td class="extra">{{attendance.overtime}}</td>
+                  <td>
+                    {% if attendance.attendance == "Present"%}<i
+                      class="fas fa-check-circle"
+                    ></i>
+                    {% else %}<i class="fas fa-times-circle"></i> {% endif %}
+                  </td>
+                </tr>
+                {% endfor %} {% endif %}
+              </tbody>
             </table>
           </div>
         </div>
       </section>
+
       <!-- <script src="static/js/today_attendance.js"></script> -->
     </main>
+    <link rel="stylesheet" href="static/css/late.css" />
+    <section class="upload-model" style="display: none">
+      <div class="inner-upload">
+        <a class="close-btn">
+          <i class="fas fa-times-circle"></i>
+        </a>
+        <form
+          method="POST"
+          action="/uploadselect"
+          enctype="multipart/form-data"
+        >
+          <div class="input-field">
+            <label class="label active">
+              <input
+                type="radio"
+                name="filetype"
+                value="attendance"
+                id="filetype1"
+                checked="true"
+              />
+              Attendance
+            </label>
+            <label class="label">
+              <input
+                type="radio"
+                name="filetype"
+                value="addEmployee"
+                id="filetype2"
+              />
+              add employee
+            </label>
+            <label class="label">
+              <input
+                type="radio"
+                name="filetype"
+                value="shift"
+                id="filetype2"
+              />
+              Shift excel
+            </label>
+          </div>
+          <div class="drag-drop-area" id="drop-area">
+            <!-- <input type="file" name="file" id="file" hidden /> -->
+            <input
+              type="file"
+              class="form-control-file"
+              id="file"
+              name="emp"
+              accept=".xlsx,.xls"
+              hidden
+              required
+            />
+            <p>Drag and drop a file here or click to select a file</p>
+          </div>
+          <div id="file-actions" style="display: none">
+            <button type="button" id="cancel-btn">Cancel</button>
+            <button type="submit" id="upload-btn">Upload</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="delete-model" style="display: none">
+      <div class="inner-delete-model">
+        <a class="close-btn">
+          <i class="fas fa-times-circle"></i>
+        </a>
+        <div class="header">
+          <div class="input-field">
+            <label class="label active" onclick="showSingleEmp()">
+              <input
+                type="radio"
+                name="deleteType"
+                id="deleteType"
+                value="single_employee"
+                checked="true"
+              />
+              Single Employee
+            </label>
+          </div>
+          <div class="input-field">
+            <label class="label" onclick="showMultiEmp()">
+              <input
+                type="radio"
+                name="deleteType"
+                id="deleteType"
+                value="multiple_employees"
+              />
+              Mlutiple Employees
+            </label>
+          </div>
+        </div>
+        <div class="display-container">
+          <div class="single-form" style="display: flex">
+            <form method="post" action="/del_single_emp">
+              <div class="input-field">
+                <label>Enter Emp Id</label>
+                <input type="text" name="empid" id="empid" />
+              </div>
+              <div class="button-container">
+                <button class="delete-btns submit">
+                  <i class="far fa-trash-alt"></i>delete
+                </button>
+              </div>
+            </form>
+          </div>
+          <div class="table-container" style="display: none">
+            <form method="post" action="/del_multiple_emp" id="deleteForm">
+              <div class="info-header">
+                <p class="counter">
+                  <span class="tag">0</span>
+                  <span>Selected</span>
+                </p>
+                <div class="button-container">
+                  <button type="button" class="delete-btns cancel">
+                    <i class="fas fa-times"></i>cancel
+                  </button>
+                  <button
+                    class="delete-btns submit confirm"
+                    onclick="submitForm()"
+                  >
+                    <i class="far fa-trash-alt"></i>delete
+                  </button>
+                </div>
+              </div>
+              <table class="delete-table" style="width: -webkit-fill-available">
+                <thead>
+                  <th>Select</th>
+                  <th>Emp Id</th>
+                  <th>Emp Name</th>
+                </thead>
+                <tbody class="delete-table-body">
+                  {% for emp_login in emp_login %}
+                  <tr>
+                    <td>
+                      <input
+                        type="checkbox"
+                        name="select"
+                        id="select"
+                        value="{{emp_login.emp_id}}"
+                      />
+                    </td>
+                    <td>{{emp_login.emp_id}}</td>
+                    <td>{{emp_login.name}}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="edit-model" style="display: none">
+      <div class="inner-delete-model">
+        <a class="close-btn">
+          <i class="fas fa-times-circle"></i>
+        </a>
+        <div class="display-container">
+          <form method="post" action="/edit_employee">
+            <div class="single-form" style="display: flex">
+              <p class="title">Edit Employee</p>
+              <div class="input-field">
+                <label>Enter Emp Id</label>
+                <input type="text" name="empid" id="empid" />
+              </div>
+              <div class="input-field">
+                <label>Select Option</label>
+                <select name="editType" id="editType">
+                  <option value="" disabled>Select type</option>
+                  <option value="name">Employee Name</option>
+                  <option value="phoneNumber">Mobile Number</option>
+                  <option value="email">Email</option>
+                  <option value="address">Address</option>
+                </select>
+              </div>
+              <div class="button-container">
+                <button class="delete-btns fetch">
+                  <i class="fas fa-download"></i>Fetch
+                </button>
+              </div>
+              <div class="after-fetch">
+                <div class="input-field">
+                  <input
+                    type="text"
+                    name="new_value"
+                    id="editInput"
+                    class="editInput"
+                  />
+                </div>
+                <button class="delete-btns change">
+                  <i class="fas fa-check"></i>Confirm
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="requested-table">
+          <table class="edit-requests">
+            <thead>
+              <th>Sno</th>
+              <th>EmpId</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Old</th>
+              <th>New Request</th>
+              <th>Action</th>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>#0001</td>
+                <td>John Doe</td>
+                <td>Name</td>
+                <td>John Doe</td>
+                <td>Lorem Ispum</td>
+                <td>
+                  <div class="action-btns">
+                    <input
+                      type="hidden"
+                      name="empid"
+                      id="empid"
+                      value="#0001"
+                    />
+                    <button class="request-btns confirm-request">
+                      <i class="fas fa-check"></i>Confirm
+                    </button>
+                    <button class="request-btns cancel-request">
+                      <i class="fas fa-times"></i>Cancel
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>#0002</td>
+                <td>Lorem Ispum</td>
+                <td>Number</td>
+                <td>9078563412</td>
+                <td>9182736450</td>
+                <td>
+                  <div class="action-btns">
+                    <input
+                      type="hidden"
+                      name="empid"
+                      id="empid"
+                      value="#0002"
+                    />
+                    <button class="request-btns confirm-request">
+                      <i class="fas fa-check"></i>Confirm
+                    </button>
+                    <button class="request-btns cancel-request">
+                      <i class="fas fa-times"></i>Cancel
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>#0003</td>
+                <td>William John</td>
+                <td>Name</td>
+                <td>William John</td>
+                <td>William Doe</td>
+                <td>
+                  <div class="action-btns">
+                    <input
+                      type="hidden"
+                      name="empid"
+                      id="empid"
+                      value="#0003"
+                    />
+                    <button class="request-btns confirm-request">
+                      <i class="fas fa-check"></i>Confirm
+                    </button>
+                    <button class="request-btns cancel-request">
+                      <i class="fas fa-times"></i>Cancel
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
     <script>
       const bell_btn = document.querySelector(".notification-btn");
       const notifications = document.querySelector(".notifications");
@@ -405,25 +665,24 @@
         });
 
         function handleFileSelection(files) {
-        if (files && files.length > 0) {
-            var allowedFileTypes = ['xlsx', 'xls', 'csv'];
+          if (files && files.length > 0) {
+            var allowedFileTypes = ["xlsx", "xls", "csv"];
             var file = files[0];
-            var fileExtension = file.name.split('.').pop().toLowerCase();
-    
+            var fileExtension = file.name.split(".").pop().toLowerCase();
+
             if (allowedFileTypes.indexOf(fileExtension) === -1) {
-                alert('Invalid file type. Please select a valid file.');
-                clearFileInput();
-                return;
+              alert("Invalid file type. Please select a valid file.");
+              clearFileInput();
+              return;
             }
-    
+
             // Manually set the files for the file input
             fileInput.files = files;
-    
+
             updateFileNameDisplay(file);
-            actions.style.display = 'block';
+            actions.style.display = "block";
+          }
         }
-    }
-    
 
         function clearFileInput() {
           fileInput.value = ""; // Clear the file input
@@ -445,48 +704,76 @@
         });
       });
 
-      const upload_model = document.querySelector(".upload-model");
-      const uploadClose = document.querySelector(".close-btn");
+      // const upload_model = document.querySelector(".upload-model");
+      // const uploadClose = document.querySelector(".close-btn");
 
-      uploadClose.addEventListener("click", () => {
-        upload_model.style.display = "none";
-      });
+      // uploadClose.addEventListener("click", () => {
+      //   upload_model.style.display = "none";
+      // });
 
-      const upload_button = document.querySelector(".upload-option");
+      // const upload_button = document.querySelector(".upload-option");
 
-      upload_button.addEventListener("click", () => {
-        upload_model.style.display = "flex";
-      });
+      // upload_button.addEventListener("click", () => {
+      //   upload_model.style.display = "flex";
+      // });
 
-      if (document
-        .querySelector(".download-btn")) {
-          document
-        .querySelector(".download-btn")
-        .addEventListener("click", function () {
-          let confirmation = confirm("are you sure..?");
+      if (document.querySelector(".download-btn")) {
+        document
+          .querySelector(".download-btn")
+          .addEventListener("click", function () {
+            let confirmation = confirm("are you sure..?");
 
-          if (confirmation) {
-            document.querySelector(".model-footer").style.display = "none";
-            html2canvas(document.querySelector(".notification-model")).then(
-              (canvas) => {
-                // Create an image and set its source to the canvas data
-                var image = canvas.toDataURL("image/png");
-                // Create a temporary link to trigger the download
-                var tmpLink = document.createElement("a");
-                tmpLink.download = "username.png"; // Set the download name
-                tmpLink.href = image;
+            if (confirmation) {
+              document.querySelector(".model-footer").style.display = "none";
+              html2canvas(document.querySelector(".notification-model")).then(
+                (canvas) => {
+                  // Create an image and set its source to the canvas data
+                  var image = canvas.toDataURL("image/png");
+                  // Create a temporary link to trigger the download
+                  var tmpLink = document.createElement("a");
+                  tmpLink.download = "username.png"; // Set the download name
+                  tmpLink.href = image;
 
-                // Temporarily add the link to the document and trigger the download
-                document.body.appendChild(tmpLink);
-                tmpLink.click();
-                document.body.removeChild(tmpLink);
-                document.querySelector(".model-footer").style.display = "flex";
-              }
-            );
-          }
-        });
+                  // Temporarily add the link to the document and trigger the download
+                  document.body.appendChild(tmpLink);
+                  tmpLink.click();
+                  document.body.removeChild(tmpLink);
+                  document.querySelector(".model-footer").style.display =
+                    "flex";
+                }
+              );
+            }
+          });
       }
-     
+      function showSingleEmp() {
+        document.querySelector(".single-form").style.display = "flex";
+        document.querySelector(".table-container").style.display = "none";
+        parseData.type = "single employee";
+
+        all_checkbox.forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+        empArray = [];
+        handleInfoHeader();
+      }
+
+      function showMultiEmp() {
+        document.getElementById("empid").value = "";
+        document.querySelector(".single-form").style.display = "none";
+        document.querySelector(".table-container").style.display = "block";
+        parseData.type = "multiple employee";
+      }
+
+      function submitForm() {
+        var form = document.getElementById("deleteForm");
+        var checkboxes = form.querySelectorAll('input[name="select"]:checked');
+
+        if (checkboxes.length > 0) {
+          form.submit();
+        } else {
+          alert("Please select at least one employee to delete.");
+        }
+      }
     </script>
     <script src="/static/js/filter.js"></script>
     <script src="/static/js/script.js"></script>

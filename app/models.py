@@ -158,3 +158,16 @@ class leave(db.Model, UserMixin):
     approved_by = db.Column(db.String(150), default='Pending')
     hr_approval = db.Column(db.String(150), default='Pending')
     date = db.Column(db.DateTime(timezone=True), default=func.now())
+
+class user_edit(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    emp_id = db.Column(db.Integer)
+    emp_name = db.Column(db.String(150), nullable=False)
+    reason = db.Column(db.String(150), nullable=False)
+    from_time = db.Column(db.String(150), nullable=False)
+    to_time = db.Column(db.String(150), nullable=False)
+    status = db.Column(db.String(150), default='Pending')
+    # hod_approval = db.Column(db.String(150), default='Pending')
+    approved_by = db.Column(db.String(150), default='Pending')
+    hr_approval = db.Column(db.String(150), default='Pending')
+    date = db.Column(db.DateTime(timezone=True), default=func.now())

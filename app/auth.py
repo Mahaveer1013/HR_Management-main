@@ -40,6 +40,7 @@ def login():
                         session['emp_id'] = dbemail.emp_id
                         session['name'] = dbemail.name
                         session['email'] = email
+                        session['phNumber']=dbemail.phoneNumber
                         session['leave_balance']=dbemail.leave_balance
                         session['late_balance']=dbemail.late_balance
                         return redirect(url_for('views.user_dashboard'))

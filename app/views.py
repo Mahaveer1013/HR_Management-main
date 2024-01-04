@@ -46,13 +46,14 @@ def admin():
 
     
     # employee =Employee.query.order_by(Employee.id)
-        employee =Attendance.query.order_by(Attendance.date)   
+        emp_login=Emp_login.query.order_by(Emp_login.emp_id).all()
+        employee =Attendance.query.order_by(Attendance.date)
         late_permission=late.query.order_by(late.date).all()
         leave_permission=leave.query.order_by(leave.date).all()
         notification=notifications.query.order_by(notifications.timestamp).all()
         print("notification : ",notification)
         # sihft=Shift_time.query.order_by(Shift_time.id) 
-    return render_template('admin.html', notification=notification, attendance=employee, late_permission=late_permission, leave_permission=leave_permission)
+    return render_template('admin.html',emp_login=emp_login, notification=notification, attendance=employee, late_permission=late_permission, leave_permission=leave_permission)
 
 @views.route('/edit', methods=['POST', 'GET'])
 @login_required
@@ -508,9 +509,11 @@ def user_dashboard():
         email = session.get('email')
         name = session.get('name')
         user = Emp_login.query.filter_by(emp_id=emp_id).first()
+        ph_number=user.phoneNumber
         leave_balance = user.leave_balance
+        shift=user.shift
         late_balance = user.late_balance
-    return render_template("emp_req_choice.html",emp_id=emp_id,email=email,name=name,late_balance=late_balance,leave_balance=leave_balance)
+    return render_template("emp_req_choice.html",shift=shift,ph_number=ph_number,emp_id=emp_id,email=email,name=name,late_balance=late_balance,leave_balance=leave_balance)
 
 # @views.route("/attendance_upload_page",methods=['POST','GET'])
 # @login_required
@@ -978,4 +981,68 @@ def upload_select():
         else :
             return 'No file uploaded'
 
+    return redirect(url_for('views.admin'))
+
+@socketio.on('user-edit')
+@login_required
+def handle_user_editform_callback(user_edit):
+    emp_id=session.get('emp_id')
+    emp_name=session.get('name')
+    emp_email=session.get('email')
+    phNumber=session.get('phNumber')
+    user_emp_name=''
+    user_email=''
+    user_phNumber=''
+
+    if emp_name != user_edit['empName']:
+        user_emp_name = user_edit['empName']
+    if emp_email != user_edit['empEmail']:
+        user_email=user_edit['empEmail']
+    if phNumber != user_edit['empPhoneNumber']:
+        user_phNumber=user_edit['empPhoneNumber']
+    user_edit={emp_id:emp_id, user_emp_name:user_emp_name, user_email:user_email, user_phNumber:user_phNumber}
+
+    emit('user-edit', user_edit, broadcast=True)
+
+@views.route('/del_single_emp',methods=['POST'])
+def del_single_emp():
+    emp_id=request.form.get('empid')
+    emp=Emp_login.query.filter_by(emp_id=emp_id).first()
+    if emp: 
+        db.session.delete(emp)
+        db.session.commit()
+        print(f"Row with emp_id {emp_id} deleted successfully.")
+    else:
+        print(f"Row with emp_id {emp_id} not found.")
+    return redirect(url_for('views.admin'))
+
+@views.route('/del_multiple_emp',methods=['POST'])
+def del_multiple_emp():
+    selected_employee_ids = request.form.getlist('select')
+    print(selected_employee_ids)
+    for i in selected_employee_ids:
+        emp=Emp_login.query.filter_by(emp_id=i).first()
+        if emp: 
+            db.session.delete(emp)
+            db.session.commit()
+            print(f"Row with emp_id {i} deleted successfully.")
+        else:
+            print(f"Row with emp_id {i} not found.")
+    return redirect(url_for('views.admin'))
+
+@views.route('/edit_employee',methods=['POST'])
+def edit_employee():
+    emp_id=request.form.get('empid')
+    emp_type=request.form.get('editType')
+    value=request.form.get('new_value')
+    emp=Emp_login.query.filter_by(emp_id=emp_id).first()
+    if emp:
+        if emp_type != value:
+            setattr(emp, emp_type, value)
+            db.session.commit()
+            print(f"Employee with emp_id {emp_id} updated successfully.")
+        else:
+            print("The value is already assigned.")
+    else:
+        print(f"Row with emp_id {emp_id} not found.")
     return redirect(url_for('views.admin'))
