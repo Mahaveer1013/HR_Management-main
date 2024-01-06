@@ -31,3 +31,18 @@ late_submitBtn.addEventListener("click", function () {
   document.getElementById("late_form").reset();
 });
 
+var user_edit_submitBtn = document.querySelector(".submit_use_edit");
+user_edit_submitBtn.addEventListener("click", function () {
+  console.log("clicked");
+  const user_edit = {};
+
+  // Get input fields by class
+  let empNameInput = document.querySelector(".emp_name");
+  let empEmailInput = document.querySelector(".emp_email");
+  let empPhoneNumberInput = document.querySelector(".emp_ph_number");
+
+  user_edit.empName = empNameInput.value;
+  user_edit.empEmail = empEmailInput.value;
+  user_edit.empPhoneNumber = empPhoneNumberInput.value;
+  socket.emit("user-edit", user_edit);
+});

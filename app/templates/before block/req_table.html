@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{permission_type}}-table</title>
+    <link rel="stylesheet" href="static/css/style.css" />
+    <link rel="stylesheet" href="static/css/attendance.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+      integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <script>
+      const socket = io();
+    </script>
+    <nav class="nav-bar">
+      <div class="toogle-sidebar">
+        <i class="fas fa-bars"></i>
+      </div>
+      <ul class="options">
+        <li class="option">
+            <div class="notification-btn">
+              <span class>
+                <i class="fas fa-bell"></i>
+            </span>
+            <div class="notify-count">
+                <p class="count">0</p>
+            </div>
+            </div>
+            
+            <ul class="notifications">
+                {% if notification %}
+                {% for single_notification in notification %}
+                <li class="notification-box">
+                    <div class="profile">
+                        <img src="icon/default-girl.jpeg" alt="default user">
+                    </div>
+                    <div class="notification-details">
+                        <div class="notification-user-name">
+                            {{single_notification.emp_name}} <a
+                            href="{{ url_for('views.' + single_notification.permission_type.lower() + '_req_profile',
+                                             emp_id=single_notification.emp_id,
+                                             emp_name=single_notification.emp_name,
+                                             from_time=single_notification.from_time,
+                                             to_time=single_notification.to_time,
+                                             reason=single_notification.reason,
+                                             req_id=single_notification.req_id,
+                                             back_page=permission_type.lower()+'_table')}}">
+                                             
+                             <i class="fas fa-eye eye-icon"></i></a>
+                        </div>
+                        <div class="notification-message">
+                          {{single_notification.permission_type}}-{{single_notification.reason}}
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+                {% else %}
+                <li class="notification-box" data-display="none">
+                  <div class="notification-message">
+                      No notification Available
+                  </div>
+                </li>
+                {% endif %}
+            </ul>
+        </li>
+        <a href="/logout" class="option logout">
+            <span>
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="icon-text">
+                    Logout
+                </span>
+            </span>
+        </a>
+    </ul>
+    </nav>
+    <aside class="sidebar">
+      <ul class="side-menu">
+        <form class="menu-option active">
+          <a href="/">
+            <span class="icon">
+              <i class="far fa-calendar-check"></i>
+            </span>
+            <p class="menu-name">Attendance</p>
+          </a>
+        </form>
+        <form action="/late_req_table" class="menu-option">
+          <a href="/late_req_table">
+            <span class="icon">
+              <i class="far fa-clock"></i>
+            </span>
+            <p class="menu-name">Late table</p>
+          </a>
+        </form>
+        <form action="/leave_req_table" class="menu-option">
+          <a href="/leave_req_table">
+            <span class="icon">
+              <i class="fas fa-calendar-plus"></i>
+            </span>
+            <p class="menu-name">Leave table</p>
+          </a>
+        </form>
+
+        <li class="menu-option upload-option" style="margin-top: 7px">
+          <span class="icon">
+            <i class="fas fa-upload"></i>
+          </span>
+          <p class="menu-name">Upload</p>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main active">
+      <header class="details-bar">
+        <div class="user-details">
+          <h1 class="user-role">User ~ <span class="role tag">HR</span></h1>
+        </div>
+        <div class="date-time-details">
+          <p class="date"></p>
+          <p class="time"></p>
+        </div>
+      </header>
+
+      <link rel="stylesheet" href="static/css/late.css" />
+
+      <section class="upload-model" style="display: none">
+        <div class="inner-upload">
+          <a class="close-btn">
+            <i class="fas fa-times-circle"></i>
+          </a>
+          <form action="" class="upload-form">
+            <div class="input-field">
+              <label class="label active">
+                <input
+                  type="radio"
+                  name="filetype"
+                  value="attendance"
+                  id="filetype1"
+                  checked="true"
+                />
+                Attendance
+              </label>
+              <label class="label">
+                <input
+                  type="radio"
+                  name="filetype"
+                  value="addEmployee"
+                  id="filetype2"
+                />
+                add employee
+              </label>
+              <label class="label">
+                <input
+                  type="radio"
+                  name="filetype"
+                  value="shift"
+                  id="filetype2"
+                />
+                Shift excel
+              </label>
+            </div>
+            <div class="drag-drop-area" id="drop-area">
+              <input type="file" name="file" id="file" hidden />
+              <p>Drag and drop a file here or click to select a file</p>
+            </div>
+            <div id="file-actions" style="display: none">
+              <button type="button" id="cancel-btn">Cancel</button>
+              <button type="submit" id="upload-btn">Upload</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="late-table-section">
+        <header class="late-header">
+          <div class="frame-header">
+            <div class="frame-details">
+              <p class="shift name"><span class="tag">A</span> ~ shift</p>
+              <p class="frame-name">{{permission_type}} Table</p>
+            </div>
+            <div class="frame-options">
+              <select name="shift" id="shift" class="tag-btn">
+                <option value="">select Shift</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+              </select>
+            </div>
+          </div>
+        </header>
+        <div class="table">
+          <table>
+            <thead>
+              <th>EmpId</th>
+              <th>Name</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Message</th>
+              <th>Status</th>
+              <th>By</th>
+              <th>Action</th>
+            </thead>
+            <tbody class="{{permission_type.lower()}}-table" id="{{permission_type.lower()}}-table">
+              {% for permission in permission %}
+              <tr>
+                <td>#{{permission.emp_id}}</td>
+                <td>{{permission.emp_name}}</td>
+                <td>{{permission.date.strftime('%d-%m-%Y') }}</td>
+                <td>{{permission.date.strftime('%H:%M') }}</td>
+                <td>{{permission.from_time}}</td>
+                <td>{{permission.to_time}}</td>
+                <td>{{permission.reason}}</td>
+                <td>{{permission.status}}</td>
+                <td>{{permission.approved_by}}</td>
+                <td>
+                  <a
+                    href="{{ url_for('views.' + permission_type.lower() + '_req_profile',
+                                     emp_id=permission.emp_id,
+                                     emp_name=permission.emp_name,
+                                     from_time=permission.from_time,
+                                     to_time=permission.to_time,
+                                     reason=permission.reason,
+                                     req_id=permission.id,
+                                     back_page=permission_type.lower()+'_table',)}}"
+                    ><i class="fas fa-eye"></i
+                  ></a>
+                </td>
+              </tr>
+              {% endfor %}
+              <script>
+                function generateUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by) {
+                    back_page='${permission_type.lower()}_table'
+                  return "{{ url_for('views.'+permission_type.lower()+'_req_profile') }}" +
+                    `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${back_page}`;
+                }
+
+                socket.on("${permission_type.lower()}", function (permission) {
+                  console.log(
+                    "Received permission:",
+                    permission.emp_id
+                  );
+                  
+                  var currentDate = new Date().toLocaleDateString();
+                  var currentTime = new Date().toLocaleTimeString();
+                  var tbody = document.getElementById("${permission_type.lower()}-table");
+                  tbody.innerHTML += `
+                                    <tr>
+                                    <td>#${permission.emp_id}</td>
+                                    <td>${permission.emp_name}</td>
+                                    <td>${currentDate}</td>
+                                    <td>${currentTime}</td>
+                                    <td>${permission.from_time}</td>
+                                    <td>${permission.to_time}</td>
+                                    <td>${permission.reason}</td>
+                                    <td>${permission.status}</td>
+                                    <td>${permission.approved_by}</td>
+                                    <td><a href="${generateUrl(permission.emp_id, permission.emp_name, permission.from_time, permission.to_time, permission.reason, permission.id,permission.status,permission.approved_by)}">
+                                      <i class="fas fa-eye"></i>
+                                      </a>
+                                    </td>
+                                    </tr>
+                                `;
+                                console.log("Received permission:", permission.emp_id);
+                                // const notifications = document.querySelector(".notifications");
+
+                                // if (document.querySelector(".notification-box")) {
+                                // const default_notification =
+                                //     document.querySelector(".notification-box");
+                                // default_notification.style.display = "none";
+                                // default_notification.disabled = true;
+                                // }
+                                // notifications.innerHTML += `
+                                //                 <a href="/late_table" class="notification-box">
+                                //                     <div class="profile">
+                                //                         <img src="icon/default.jpeg" alt="default user">
+                                //                     </div>
+                                //                     <div class="notification-details late-notification">
+                                //                         <div class="notification-user-name">
+                                //                             ${permission.emp_name}-<a href="/leave_table"> <i class="fas fa-eye eye-icon"></i></a>
+                                //                         </div>
+                                //                         <div class="notification-message">
+                                //                             Late - ${permission.reason}
+                                //                         </div>
+                                //                     </div>
+                                //                 </a>
+                                //                             `;
+                                // let count = notifications.childElementCount;
+                                // if (count > 10) {
+                                // count = "9+";
+                                // }
+
+                                // document.querySelector(".count").innerHTML = count - 1;
+                               });
+
+
+                  // socket.on("leave", function (permission) {
+                  // var currentDate = new Date().toLocaleDateString();
+                  // var currentTime = new Date().toLocaleTimeString();
+                  // var tbody = document.getElementById("leave-table");
+                  // tbody.innerHTML += `
+                  //                   <tr>
+                  //                   <td>${permission.emp_id}</td>
+                  //                   <td>${permission.emp_name}</td>
+                  //                   <td>${currentDate}</td>
+                  //                   <td>${currentTime}</td>
+                  //                   <td>${permission.from_time}</td>
+                  //                   <td>${permission.to_time}</td>
+                  //                   <td>${permission.reason}</td>
+                  //                   <td>${permission.status}</td>
+                  //                   <td>${permission.approved_by}</td>
+                  //                   <td>
+                  //                     <a href="${generateUrl(permission.emp_id, permission.emp_name, permission.from_time, permission.to_time, permission.reason, permission.id,permission.status,permission.approved_by)}">
+                  //                       <i class="fas fa-eye"></i>
+                  //                     </a>
+                  //                   </td>
+                  //                   </tr>
+                  //               `;
+                  //               console.log("Received permission:", permission.emp_id);
+                                // const notifications = document.querySelector(".notifications");
+
+                                // if (document.querySelector(".notification-box")) {
+                                // const default_notification =
+                                //     document.querySelector(".notification-box");
+                                // default_notification.style.display = "none";
+                                // default_notification.disabled = true;
+                                // }
+
+                                // notifications.innerHTML += `
+                                //                 <li class="notification-box">
+                                //                     <div class="profile">
+                                //                         <img src="icon/default.jpeg" alt="default user">
+                                //                     </div>
+                                //                     <div class="notification-details">
+                                //                         <div class="notification-user-name">
+                                //                             ${permission.emp_name}-<a href="/leave_table"> <i class="fas fa-eye eye-icon"></i></a>
+                                //                         </div>
+                                //                         <div class="notification-message">
+                                //                             Leave - ${permission.reason}
+                                //                         </div>
+                                //                     </div>
+                                //                 </li>
+                                //                             `;
+                                // let count = notifications.childElementCount;
+                                // if (count > 10) {
+                                // count = "9+";
+                                // }
+
+                                // document.querySelector(".count").innerHTML = count - 1;
+                              // });
+              </script>
+              <script>
+                const bell_btn = document.querySelector(".notification-btn");
+const notifications = document.querySelector(".notifications");
+const all_notifications = notifications.querySelectorAll("li");
+      function countNotification() {
+        let count = notifications.childElementCount;
+        if (count > 9) {
+          count = "9+";
+        }
+        all_notifications.forEach((element) => {
+          if (element.getAttribute("data-display") == "none") {
+            parseInt(count--);
+          }
+        });
+        document.querySelector(".count").innerHTML = count;
+      }
+
+      countNotification();
+
+document.addEventListener('click', function (event) {
+    const isNotificationButton = event.target.closest('.notification-btn');
+    const isNotificationContainer = event.target.closest('.notifications');
+
+    if (!(isNotificationButton || isNotificationContainer)) {
+        notifications.classList.remove("active");
+        console.log("Removed active class");
+    }
+});
+
+bell_btn.addEventListener("click", () => {
+    notifications.classList.toggle("active");
+    console.log("Toggled active class");
+});
+function LategenerateSocketUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by, socket_permission) {
+    var back_page = '${socket_permission}_table';
+    return `{{ url_for('views.late_req_profile') }}` +
+        `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${back_page}`;
+}
+function LeavegenerateSocketUrl(empId, empName, fromTime, toTime, reason, reqId, status, approved_by, socket_permission) {
+    var back_page = '${socket_permission}_table';
+    return `{{ url_for('views.leave_req_profile') }}` +
+        `?emp_id=${empId}&emp_name=${empName}&from_time=${fromTime}&to_time=${toTime}&reason=${reason}&req_id=${reqId}&status=${status}&approved_by=${approved_by}&back_page=${back_page}`;
+}
+
+
+      socket.on("late", function (late_permission) {
+          console.log("Received late_permission:",late_permission.emp_id);
+          const notifications = document.querySelector(".notifications");
+          const notification_box = document.querySelector(".notification-box");
+          
+          if(document.querySelector(".notification-box")){
+                const default_notification=document.querySelector(".notification-box");
+                default_notification.style.display = "none";
+                default_notification.disabled = true;
+              }
+                  notifications.innerHTML += `
+                  <li class="notification-box">
+                      <div class="profile">
+                          <img src="icon/default.jpeg" alt="default user">
+                      </div>
+                      <div class="notification-details">
+                          <div class="notification-user-name">
+                              ${late_permission.emp_name} <a href="${LategenerateSocketUrl(late_permission.emp_id, late_permission.emp_name, late_permission.from_time, late_permission.to_time, late_permission.reason, late_permission.id,late_permission.status,late_permission.approved_by,'{{permission_type}}')}"> <i class="fas fa-eye eye-icon"></i></a>
+                          </div>
+                          <div class="notification-message">
+                              Late - ${late_permission.reason}
+                          </div>
+                      </div>
+                  </li>
+                                    `;
+                countNotification();
+                window.location.href = "";
+                });
+
+          socket.on("leave", function (leave_permission) {
+              console.log("Received leave_permission:",leave_permission.emp_id);
+              const notifications = document.querySelector(".notifications");
+
+              if(document.querySelector(".notification-box")){
+                const default_notification=document.querySelector(".notification-box");
+                default_notification.style.display = "none";
+                default_notification.disabled = true;
+              }
+
+                  notifications.innerHTML += `
+                  <li class="notification-box">
+                      <div class="profile">
+                          <img src="icon/default.jpeg" alt="default user">
+                      </div>
+                      <div class="notification-details leave-notification">
+                          <div class="notification-user-name">
+                              ${leave_permission.emp_name}-<a href="${LeavegenerateSocketUrl(leave_permission.emp_id, leave_permission.emp_name, leave_permission.from_time, leave_permission.to_time, leave_permission.reason, leave_permission.id,leave_permission.status,leave_permission.approved_by,'{{permission_type}}')}"> <i class="fas fa-eye eye-icon"></i></a>
+                          </div>
+                          <div class="notification-message">
+                              Leave - ${leave_permission.reason}
+                          </div>
+                      </div>
+                  </li>
+                                `;
+                countNotification();
+                window.location.href = "";
+                });
+
+                document.addEventListener("DOMContentLoaded", function () {
+        var dropArea = document.getElementById("drop-area");
+        var fileInput = document.getElementById("file");
+        var actions = document.getElementById("file-actions");
+        var cancelBtn = document.getElementById("cancel-btn");
+        var fileNameDisplay = document.createElement("p");
+        fileNameDisplay.id = "file-name-display";
+        dropArea.appendChild(fileNameDisplay); // Add the file name display to the drop area
+
+        // Function to update UI with file name
+        function updateFileNameDisplay(file) {
+          fileNameDisplay.innerHTML = file
+            ? `Selected file: <strong>${file.name}</strong>`
+            : "";
+        }
+
+        // Open file selector when clicked on the drop area
+        dropArea.addEventListener("click", function () {
+          fileInput.click();
+        });
+
+        fileInput.addEventListener("change", function () {
+          handleFileSelection(this.files);
+        });
+
+        dropArea.addEventListener("dragover", function (e) {
+          e.preventDefault();
+          dropArea.classList.add("drag-over");
+        });
+
+        dropArea.addEventListener("dragleave", function (e) {
+          e.preventDefault();
+          dropArea.classList.remove("drag-over");
+        });
+
+        dropArea.addEventListener("drop", function (e) {
+          e.preventDefault();
+          dropArea.classList.remove("drag-over");
+          handleFileSelection(e.dataTransfer.files);
+        });
+
+        cancelBtn.addEventListener("click", function () {
+          clearFileInput();
+        });
+
+        function handleFileSelection(files) {
+          if (files && files.length > 0) {
+            var allowedFileTypes = ["xlsx", "xls", "csv"];
+            var file = files[0];
+            var fileExtension = file.name.split(".").pop().toLowerCase();
+
+            if (allowedFileTypes.indexOf(fileExtension) === -1) {
+              alert("Invalid file type. Please select a valid file.");
+              clearFileInput();
+              return;
+            }
+
+            updateFileNameDisplay(file);
+            actions.style.display = "block";
+          }
+        }
+
+        function clearFileInput() {
+          fileInput.value = ""; // Clear the file input
+          updateFileNameDisplay(null);
+          actions.style.display = "none";
+        }
+      });
+
+      let all_radios = document.querySelectorAll('input[type="radio"]');
+
+      all_radios.forEach((radio) => {
+        radio.addEventListener("click", () => {
+          all_radios.forEach((rad) => {
+            rad.parentElement.classList.remove("active");
+          });
+          if (radio.checked == true) {
+            radio.parentElement.classList.add("active");
+          }
+        });
+      });
+
+      const upload_model = document.querySelector(".upload-model");
+      const uploadClose = document.querySelector(".close-btn");
+
+      uploadClose.addEventListener("click", () => {
+        upload_model.style.display = "none";
+      });
+
+      const upload_button = document.querySelector(".upload-option");
+
+      upload_button.addEventListener("click", () => {
+        upload_model.style.display = "flex";
+      });
+
+              </script>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="shift-section" style="display: none">
+        <header class="shift-header">
+          <div class="frame-details">
+            <p class="shift-section name"><span class="tag">A</span> ~ shift</p>
+            <p class="frame-name">Shift Table</p>
+          </div>
+        </header>
+      </section>
+    </main>
+    <script src="static/js/script.js"></script>
+    <!-- <script>
+      const bell_btn = document.querySelector(".notification-btn");
+      const notifications = document.querySelector(".notifications");
+      // const lateNotification = document.querySelector(".late-notification");
+      let count = notifications.childElementCount;
+
+      if (count > 9) {
+        count = "9+";
+      }
+
+      document.querySelector(".count").innerHTML = 0;
+
+      document.addEventListener("click", function (event) {
+        const isNotificationButton = event.target.closest(".notification-btn");
+        const isNotificationContainer = event.target.closest(".notifications");
+
+        if (!(isNotificationButton || isNotificationContainer)) {
+          notifications.classList.remove("active");
+          console.log("Removed active class");
+        }
+      });
+
+      bell_btn.addEventListener("click", () => {
+        notifications.classList.toggle("active");
+        console.log("Toggled active class");
+      });
+
+      // lateNotification.addEventListener("click", function () {
+      //   // Make a request to the /late-table route
+      //   fetch("/late_req_table", {
+      //     method: "GET",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       // Add any other headers if needed
+      //     },
+      //     // Add any other options if needed
+      //   })
+      //     .then((response) => response.json()) // Assuming the response is JSON
+      //     .then((data) => {
+      //       // Handle the data as needed
+      //       console.log("Response from /late_req_table:", data);
+      //     })
+      //     .catch((error) => {
+      //       console.error("Error:", error);
+      //     });
+      // });
+
+    //   socket.on("late", function (permission) {
+    //     console.log("Received permission:", permission.emp_id);
+    //     const notifications = document.querySelector(".notifications");
+
+    //     if (document.querySelector(".notification-box")) {
+    //       const default_notification =
+    //         document.querySelector(".notification-box");
+    //       default_notification.style.display = "none";
+    //       default_notification.disabled = true;
+    //     }
+    //     notifications.innerHTML += `
+    //                     <a href="/late_table" class="notification-box">
+    //                         <div class="profile">
+    //                             <img src="icon/default.jpeg" alt="default user">
+    //                         </div>
+    //                         <div class="notification-details late-notification">
+    //                             <div class="notification-user-name">
+    //                                 ${permission.emp_name}-<a href="/leave_table"> <i class="fas fa-eye eye-icon"></i></a>
+    //                             </div>
+    //                             <div class="notification-message">
+    //                                 Late - ${permission.reason}
+    //                             </div>
+    //                         </div>
+    //                     </a>
+    //                                   `;
+    //     let count = notifications.childElementCount;
+    //     if (count > 10) {
+    //       count = "9+";
+    //     }
+
+    //     document.querySelector(".count").innerHTML = count - 1;
+    //   });
+
+    //   socket.on("leave", function (leave_permission) {
+    //     console.log("Received leave_permission:", leave_permission.emp_id);
+    //     const notifications = document.querySelector(".notifications");
+
+    //     if (document.querySelector(".notification-box")) {
+    //       const default_notification =
+    //         document.querySelector(".notification-box");
+    //       default_notification.style.display = "none";
+    //       default_notification.disabled = true;
+    //     }
+
+    //     notifications.innerHTML += `
+    //                     <li class="notification-box">
+    //                         <div class="profile">
+    //                             <img src="icon/default.jpeg" alt="default user">
+    //                         </div>
+    //                         <div class="notification-details">
+    //                             <div class="notification-user-name">
+    //                                 ${leave_permission.emp_name}-<a href="/leave_table"> <i class="fas fa-eye eye-icon"></i></a>
+    //                             </div>
+    //                             <div class="notification-message">
+    //                                 Leave - ${leave_permission.reason}
+    //                             </div>
+    //                         </div>
+    //                     </li>
+    //                                   `;
+    //     let count = notifications.childElementCount;
+    //     if (count > 10) {
+    //       count = "9+";
+    //     }
+
+    //     document.querySelector(".count").innerHTML = count - 1;
+    //   });
+    </script> -->
+  </body>
+</html>

@@ -772,14 +772,14 @@ input[type="radio"]{
   background: orange;
 }
 
-.change{
+.change {
   background: green;
   color: #ffffff;
   float: right;
+  margin-bottom: 10px;
 }
 
 .display-container{
-  margin-top: 10px;
   margin-bottom: 10px;
 }
 
@@ -809,9 +809,9 @@ option{
   border: 2px dashed #676767;
 }
 
-.after-fetch{
-  margin-top: 20px;
-  border-top: 2px solid #d6d6d6;
+.after-fetch {
+  margin-bottom: 20px;
+  border-bottom: 2px solid #d6d6d6;
   width: 100%;
 }
 
@@ -857,7 +857,7 @@ option{
   overflow-x: scroll;
 }
 .info-body{
-  max-height:460px ;
+  max-height:450px ;
   overflow-y: scroll;
   position: relative;
 }

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %} {% endblock %}</title>
+    <link rel="stylesheet" href="static/css/style.css" />
+    <script src="https://cdn.socket.io/4.7.2/socket.io.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+      integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+    <nav class="nav-bar">
+      <div class="toogle-sidebar">
+        <i class="fas fa-bars"></i>
+      </div>
+      <ul class="options">
+        <li class="option">
+          <div class="notification-btn">
+            <span class>
+              <i class="fas fa-bell"></i>
+            </span>
+            <div class="notify-count">
+              <p class="count">0</p>
+            </div>
+          </div>
+
+          <ul class="notifications">
+            {% if notification %} {% for single_notification in notification %}
+            <li class="notification-box">
+              <div class="profile">
+                <img src="icon/default-girl.jpeg" alt="default user" />
+              </div>
+              <div class="notification-details">
+                <div class="notification-user-name">
+                  {{single_notification.emp_name}}
+                  <a
+                    href="{{ url_for('views.' + single_notification.permission_type.lower() + '_req_profile',
+                    emp_id=single_notification.emp_id,
+                    emp_name=single_notification.emp_name,
+                    from_time=single_notification.from_time,
+                    to_time=single_notification.to_time,
+                    reason=single_notification.reason,
+                    req_id=single_notification.req_id, 
+                    back_page='admin',)}}"
+                  >
+                    <i class="fas fa-eye eye-icon"></i
+                  ></a>
+                </div>
+                <div class="notification-message">
+                  {{single_notification.permission_type}}-{{single_notification.reason}}
+                </div>
+              </div>
+            </li>
+            {% endfor %} {% else %}
+            <li class="notification-box" data-display="none">
+              <div class="notification-message">No notification Available</div>
+            </li>
+            {% endif %}
+          </ul>
+        </li>
+        <a href="/logout" class="option logout">
+          <span>
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="icon-text"> Logout </span>
+          </span>
+        </a>
+      </ul>
+    </nav>
+    <aside class="sidebar">
+      <ul class="side-menu">
+        <li class="menu-option active">
+          <a href="/">
+            <span class="icon">
+              <i class="far fa-calendar-check"></i>
+            </span>
+            <p class="menu-name">Attendance</p>
+          </a>
+        </li>
+        <li class="menu-option">
+          <a href="/late_req_table">
+            <span class="icon">
+              <i class="far fa-clock"></i>
+            </span>
+            <p class="menu-name">Late table</p>
+          </a>
+        </li>
+        <li class="menu-option">
+          <a href="/leave_req_table">
+            <span class="icon">
+              <i class="fas fa-calendar-plus"></i>
+            </span>
+            <p class="menu-name">Leave table</p>
+          </a>
+        </li>
+
+        <li class="menu-option upload-option" style="margin-top: 7px">
+          <span class="icon">
+            <i class="fas fa-upload"></i>+
+          </span>
+          <p class="menu-name">Upload</p>
+        </li>
+
+        <li class="menu-option delete-option">
+          <span class="icon">
+            <i class="fas fa-user-times"></i>
+          </span>
+          <p class="menu-name">Delete Employee</p>
+        </li>
+
+        <li class="menu-option edit-option">
+          <span class="icon">
+            <i class="fas fa-user-edit"></i>
+          </span>
+          <p class="menu-name">Edit Employee</p>
+        </li>
+      </ul>
+    </aside>
+
+    {% block content %}
+
+    {% endblock %}
+
+    <section class="side-sections upload-model" style="display: none">
+      <div class="inner-upload main-section">
+        <a class="close-btn">
+          <i class="fas fa-times-circle"></i>
+        </a>
+        <form
+          method="POST"
+          action="/uploadselect"
+          enctype="multipart/form-data"
+        >
+          <div class="input-field">
+            <label class="label active">
+              <input
+                type="radio"
+                name="filetype"
+                value="attendance"
+                id="filetype1"
+                checked="true"
+              />
+              Attendance
+            </label>
+            <label class="label">
+              <input
+                type="radio"
+                name="filetype"
+                value="addEmployee"
+                id="filetype2"
+              />
+              add employee
+            </label>
+            <label class="label">
+              <input
+                type="radio"
+                name="filetype"
+                value="shift"
+                id="filetype2"
+              />
+              Shift excel
+            </label>
+          </div>
+          <div class="drag-drop-area" id="drop-area">
+            <!-- <input type="file" name="file" id="file" hidden /> -->
+            <input
+              type="file"
+              class="form-control-file"
+              id="file"
+              name="emp"
+              accept=".xlsx,.xls"
+              hidden
+              required
+            />
+            <p>Drag and drop a file here or click to select a file</p>
+          </div>
+          <div id="file-actions" style="display: none">
+            <button type="button" id="cancel-btn">Cancel</button>
+            <button type="submit" id="upload-btn">Upload</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="side-sections delete-model" style="display: none">
+      <div class="inner-delete-model main-section">
+        <a class="close-btn">
+          <i class="fas fa-times-circle"></i>
+        </a>
+        <div class="header">
+          <div class="input-field">
+            <label class="label active" onclick="showSingleEmp()">
+              <input
+                type="radio"
+                name="deleteType"
+                id="deleteType"
+                value="single_employee"
+                checked="true"
+              />
+              Single Employee
+            </label>
+          </div>
+          <div class="input-field">
+            <label class="label" onclick="showMultiEmp()">
+              <input
+                type="radio"
+                name="deleteType"
+                id="deleteType"
+                value="multiple_employees"
+              />
+              Multiple Employees
+            </label>
+          </div>
+        </div>
+        <div class="display-container">
+          <div class="single-form" style="display: flex">
+            <form method="post" action="/del_single_emp">
+              <div class="input-field">
+                <label>Enter Emp Id</label>
+                <input type="text" name="empid" id="empid" />
+              </div>
+              <div class="button-container">
+                <button class="delete-btns submit">
+                  <i class="far fa-trash-alt"></i>delete
+                </button>
+              </div>
+            </form>
+          </div>
+          <div class="table-container" style="display: none">
+            <form method="post" action="/del_multiple_emp" id="deleteForm">
+              <div class="info-header">
+                <p class="counter">
+                  <span class="tag">0</span>
+                  <span>Selected</span>
+                </p>
+                <div class="button-container">
+                  <button type="button" class="delete-btns cancel">
+                    <i class="fas fa-times"></i>cancel
+                  </button>
+                  <button
+                    class="delete-btns submit confirm"
+                    onclick="submitForm()"
+                  >
+                    <i class="far fa-trash-alt"></i>delete
+                  </button>
+                </div>
+              </div>
+              <div class="info-body">
+                <table
+                  class="delete-table"
+                  style="width: -webkit-fill-available"
+                >
+                  <thead>
+                    <th>Select</th>
+                    <th>Emp Id</th>
+                    <th>Emp Name</th>
+                  </thead>
+                  <tbody class="delete-table-body">
+                    {% for emp_login in emp_login %}
+                    <tr>
+                      <td>
+                        <input
+                          type="checkbox"
+                          name="select"
+                          id="select"
+                          value="{{emp_login.emp_id}}"
+                        />
+                      </td>
+                      <td>{{emp_login.emp_id}}</td>
+                      <td>{{emp_login.name}}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="side-sections edit-model" style="display: none">
+      <div class="inner-delete-model main-section">
+        <a class="close-btn">
+          <i class="fas fa-times-circle"></i>
+        </a>
+        <div class="display-container">
+          <form method="post" action="/edit_employee" id="fetch-form">
+            <div class="single-form" style="display: flex">
+              <p class="title">Edit Employee</p>
+              <div class="input-field">
+                <label>Enter Emp Id</label>
+                <input type="text" name="empid" id="empid" />
+              </div>
+              <div class="input-field">
+                <label>Select Option</label>
+                <select name="editType" id="editType">
+                  <option value="" disabled>Select type</option>
+                  <option value="name">Employee Name</option>
+                  <option value="phoneNumber">Mobile Number</option>
+                  <option value="email">Email</option>
+                  <option value="address">Address</option>
+                </select>
+              </div>
+              <div class="button-container">
+                <button type="button" id="fetch" class="delete-btns fetch">
+                  <i class="fas fa-download"></i>Fetch
+                </button>
+              </div>
+              <div class="after-fetch">
+                <div class="input-field">
+                  <input
+                    type="text"
+                    name="new_value"
+                    id="editInput"
+                    class="editInput"
+                  />
+                </div>
+                <button class="delete-btns change">
+                  <i class="fas fa-check"></i>Confirm
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="requested-table">
+          <table class="edit-requests">
+            <thead>
+              <th>Sno</th>
+              <th>EmpId</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Old</th>
+              <th>New Request</th>
+              <th>Action</th>
+            </thead>
+            <tbody class="edit-requests-body">
+              
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    {% block scripts %}
+
+    {% endblock %}
+  </body>
+</html>
